@@ -1,1 +1,1 @@
-from ..db_connection import obtener_conexion
+from app.db_connection import obtener_conexion

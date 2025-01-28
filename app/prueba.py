@@ -1,4 +1,4 @@
-from funciones.EstadoSituacion import mayorizar
+from app.funciones.EstadoSituacion import mayorizar
 
 
 
