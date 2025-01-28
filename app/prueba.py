@@ -1,4 +1,4 @@
-from db_functions import mayorizar, obtener_datos
+from db_functions import mayorizar
 
 resultado=mayorizar()
 print(resultado)
