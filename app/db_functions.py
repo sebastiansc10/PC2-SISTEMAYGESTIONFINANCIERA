@@ -1,5 +1,5 @@
 # db_functions.py
-from app.db_connection import obtener_conexion
+from db_connection import obtener_conexion
 
 def obtener_datos():
     # Establecer la conexión
