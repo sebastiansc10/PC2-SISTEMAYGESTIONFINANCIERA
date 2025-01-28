@@ -1,46 +1,71 @@
-# gui.py
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel
-import requests
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QWidget
+from PyQt5.QtCore import Qt  # Importar Qt para AlignCenter
 
-class MyWindow(QWidget):
+
+# Funciones para los botones
+def abrir_diarios():
+    QMessageBox.information(None, "Diarios", "Se ha abierto la sección de Diarios")
+
+def calcular():
+    QMessageBox.information(None, "Calcular", "Se ha abierto la sección de Calcular")
+
+def reporte():
+    QMessageBox.information(None, "Reporte", "Se ha abierto la sección de Reporte")
+
+# Ventana principal
+class SistemaContable(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Configurar la ventana principal
-        self.setWindowTitle("Mi GUI con PyQt")
-        self.setGeometry(100, 100, 300, 200)
+        # Configurar ventana
+        self.setWindowTitle("Sistema contable")
+        self.setGeometry(100, 100, 400, 300)
 
-        # Crear un layout
-        layout = QVBoxLayout()
+        # Crear el layout principal
+        main_layout = QVBoxLayout()
 
-        # Etiqueta para mostrar el mensaje
-        self.label = QLabel("Esperando...", self)
-        layout.addWidget(self.label)
+        # Título
+        titulo_label = QLabel("Sistema contable")
+        titulo_label.setStyleSheet("font-size: 18px; font-weight: bold; text-align: center;")
+        titulo_label.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(titulo_label)
 
-        # Botón para hacer una solicitud a la API
-        self.button = QPushButton("Obtener Datos de API", self)
-        self.button.clicked.connect(self.on_button_click)
-        layout.addWidget(self.button)
+        # Layout para botones y flechas
+        botones_layout = QHBoxLayout()
 
-        # Establecer el layout en la ventana principal
-        self.setLayout(layout)
+        # Botones con flechas
+        diarios_button = QPushButton("Diarios")
+        diarios_button.clicked.connect(abrir_diarios)
+        botones_layout.addWidget(diarios_button)
 
-    def on_button_click(self):
-        # Hacer la solicitud a tu endpoint FastAPI
-        response = requests.get("http://127.0.0.1:8000/api/etiquetas")
-        if response.status_code == 200:
-            # Mostrar los resultados en la etiqueta
-            self.label.setText(f"Datos obtenidos: {response.json()}")
-        else:
-            self.label.setText("Error al obtener los datos")
+        flecha1_label = QLabel("➡️")
+        flecha1_label.setAlignment(Qt.AlignCenter)
+        botones_layout.addWidget(flecha1_label)
 
-# Función para ejecutar la aplicación
-def run_app():
-    app = QApplication(sys.argv)
-    window = MyWindow()
-    window.show()
-    sys.exit(app.exec_())
+        calcular_button = QPushButton("Calcular")
+        calcular_button.clicked.connect(calcular)
+        botones_layout.addWidget(calcular_button)
 
+        flecha2_label = QLabel("➡️")
+        flecha2_label.setAlignment(Qt.AlignCenter)
+        botones_layout.addWidget(flecha2_label)
+
+        reporte_button = QPushButton("Reporte")
+        reporte_button.clicked.connect(reporte)
+        botones_layout.addWidget(reporte_button)
+
+        # Agregar los botones al layout principal
+        main_layout.addLayout(botones_layout)
+
+        # Crear un widget central y configurar el layout
+        central_widget = QWidget()
+        central_widget.setLayout(main_layout)
+        self.setCentralWidget(central_widget)
+
+# Ejecutar aplicación
 if __name__ == "__main__":
-    run_app()
+    app = QApplication(sys.argv)
+    ventana = SistemaContable()
+    ventana.show()
+    sys.exit(app.exec_())
