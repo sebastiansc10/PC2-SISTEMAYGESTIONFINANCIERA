@@ -8,9 +8,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 from app.funciones.EstadoResultados import calcular_estado_resultados
 
 # Simulación del JSON obtenido de Balance de Comprobación
-import json
-
-import json
 
 balance_json = json.dumps([
     {"id_cuenta": 10, "nombre_cuenta": "Efectivo", "id_elemento": 1, "Debe": 10900, "Haber": 0},
