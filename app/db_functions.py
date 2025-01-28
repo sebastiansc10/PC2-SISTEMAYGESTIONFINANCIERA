@@ -1,23 +1,6 @@
 # db_functions.py
 from db_connection import obtener_conexion
 
-def obtener_datos():
-    # Establecer la conexión
-    with obtener_conexion() as conn:
-        with conn.cursor() as cursor:
-            # Ejecutar la consulta
-            cursor.execute("""SELECT * FROM etiquetas""")
-            # Obtener los resultados
-            resultados = cursor.fetchall()
-    return resultados
-
-def insertar_dato(valor):
-    # Establecer la conexión
-    with obtener_conexion() as conn:
-        with conn.cursor() as cursor:
-            # Ejecutar una inserción
-            cursor.execute("INSERT INTO tu_tabla (columna) VALUES (%s)", (valor,))
-            conn.commit()
 
 def mayorizar():
     with obtener_conexion() as conn:
