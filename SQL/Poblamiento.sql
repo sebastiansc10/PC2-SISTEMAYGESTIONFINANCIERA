@@ -95,7 +95,7 @@ INSERT INTO Cuenta (ID_Cuenta, Nombre_Cuenta, ID_Elemento) VALUES
 
 
 insert into diario (Fecha, glosa) values
-('2025/01/27', 'Datos de prueba')
+('2025/01/27', 'Datos de prueba');
 
 
 -- Insertar transacciones para el 27 de enero de 2025
