@@ -1,4 +1,6 @@
-from db_functions import mayorizar
+from funciones.EstadoSituacion import mayorizar
+
+
 
 resultado=mayorizar()
 print(resultado)
