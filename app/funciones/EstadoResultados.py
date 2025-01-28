@@ -1,20 +1,23 @@
 import json
+from app.funciones.EstadoSituacion import calcularbalance  # Importamos la función que obtiene los datos
 
 # Definimos la clasificación de cuentas por id_elemento
 CATEGORIAS_CUENTAS = {
     "ventas": [7],  # Ingresos
-    "costo_ventas": [6],  # Solo para costos directos de venta
-    "gastos_operativos": [62, 63, 68],  # Solo gastos específicos
-    "otros_ingresos": [75],  # Otros ingresos no operativos
-    "perdidas": [66],  # Pérdidas extraordinarias
+    "costo_ventas": [6],  # Costos de venta
+    "gastos_operativos": [6],  # Gastos operativos específicos
+    "otros_ingresos": [7],  # Otros ingresos no operativos
+    "perdidas": [6],  # Pérdidas extraordinarias
     "impuesto_renta": [8]  # Impuestos
 }
 
-def calcular_estado_resultados(balance_json):
+def calcular_estado_resultados(fechainicio, fechafin):
     """
-    Recibe el JSON del Balance de Comprobación y genera un Estado de Resultados
-    corregido para evitar errores en la clasificación de cuentas.
+    Obtiene el Balance de Comprobación desde `calcularbalance` y genera el Estado de Resultados.
     """
+
+    # Obtener datos del balance de comprobación como JSON
+    balance_json = calcularbalance(fechainicio, fechafin)
 
     # Convertir JSON a lista de diccionarios
     balance = json.loads(balance_json)
@@ -27,7 +30,7 @@ def calcular_estado_resultados(balance_json):
         :param tipo: 'Debe' o 'Haber'.
         :return: Suma total del tipo seleccionado.
         """
-        return sum(item[tipo] for item in balance if item["id_cuenta"] in lista_cuentas)
+        return sum(item.get(tipo.lower(), 0) for item in balance if item["id_cuenta"] in lista_cuentas)
 
     # Función para obtener gastos operativos desglosados automáticamente
     def obtener_gastos_operativos():
@@ -39,26 +42,26 @@ def calcular_estado_resultados(balance_json):
         total_gastos = 0
 
         for item in balance:
-            if item["id_cuenta"] in CATEGORIAS_CUENTAS["gastos_operativos"] and item["Debe"] > 0:
+            if item["id_cuenta"] in CATEGORIAS_CUENTAS["gastos_operativos"] and item.get("debe", 0) > 0:
                 cuenta = item["nombre_cuenta"]
-                monto = item["Debe"]
+                monto = item.get("debe", 0)
                 gastos[cuenta] = monto
                 total_gastos += monto
 
         return {"detalle": gastos, "total_gastos_operativos": total_gastos}
 
-    # Obtener valores corregidos desde el JSON del Balance de Comprobación
+    # Obtener valores corregidos desde el Balance de Comprobación
     ventas = obtener_total_por_cuentas([70], "Haber")  # Solo cuenta de ventas
     costo_ventas = obtener_total_por_cuentas([69], "Debe")  # Solo costo de venta
     otros_ingresos = obtener_total_por_cuentas([75], "Haber")  # Solo otros ingresos
     perdidas = obtener_total_por_cuentas([66], "Debe")  # Solo pérdidas
     impuesto_renta = obtener_total_por_cuentas([88], "Debe")  # Solo impuesto a la renta
 
-    # Obtener desglose de gastos operativos (sin incluir costo de ventas ni pérdidas)
+    # Obtener desglose de gastos operativos
     gastos_operativos = obtener_gastos_operativos()
     total_gastos_operativos = gastos_operativos["total_gastos_operativos"]
 
-    # Cálculos corregidos del Estado de Resultados
+    # Cálculos del Estado de Resultados
     utilidad_bruta = ventas - costo_ventas
     utilidad_operativa = utilidad_bruta - total_gastos_operativos
     utilidad_antes_impuestos = utilidad_operativa + otros_ingresos - perdidas
