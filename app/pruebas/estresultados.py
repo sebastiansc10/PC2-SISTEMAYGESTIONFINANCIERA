@@ -8,16 +8,15 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 
 from app.funciones.EstadoResultados import calcular_estado_resultados
 
-# 🔹 Manejo de Fechas: Verificar si se pasaron como argumentos
+# 🔹 Captura de fechas desde argumentos o valores por defecto
 if len(sys.argv) == 3:
     fechainicio = sys.argv[1]
     fechafin = sys.argv[2]
 else:
-    # 🔹 Usar fechas por defecto (corregido a formato YYYY-MM-DD)
-    fechainicio = '2009-04-01'
-    fechafin = '2009-09-30'
+    fechainicio = "2009-04-01"
+    fechafin = "2009-09-30"
 
-# 🔹 Formatear fechas a YYYY-MM-DD si vienen en otro formato
+# 🔹 Validación y conversión de fechas a formato `YYYY-MM-DD`
 try:
     fechainicio = datetime.strptime(fechainicio, "%Y-%m-%d").strftime("%Y-%m-%d")
     fechafin = datetime.strptime(fechafin, "%Y-%m-%d").strftime("%Y-%m-%d")
