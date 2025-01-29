@@ -1,9 +1,15 @@
 import json
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QVBoxLayout, QScrollArea, QDateEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QScrollArea, QDateEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtGui import QColor, QBrush
-from app.funciones.EstadoSituacion import calcularbalance, total_debe, total_haber
-from app.funciones.EstadoResultados import calcular_estado_resultados
+from app.funciones.EstadoSituacion import (
+    calcularbalance, total_debe, total_haber, 
+    situacion_activocorriente, situacion_totalactivocorriente,
+    situacion_pasivo, situacion_totalpasivo,
+    situacion_activonocorriente, situacion_totalactivonocorriente,
+    situacion_patrimonio
+)
+from app.funciones.EstadoResultados import calcular_estado_resultados, utilidadantes
 
 class Page3(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -84,6 +90,57 @@ class Page3(QtWidgets.QWidget):
                     }
                 """)
                 content_layout.addWidget(self.tabla_balance)
+            elif titulo == "Estado de situación financiera":
+                # Crear las tablas lado a lado
+                tablas_layout = QHBoxLayout()
+                
+                # Columna izquierda
+                columna_izquierda = QVBoxLayout()
+                
+                # Tabla Activo corriente
+                self.tabla_activo_corriente = self.crear_tabla()
+                columna_izquierda.addWidget(self.tabla_activo_corriente)
+                
+                # Tabla Activo no corriente
+                self.tabla_activo_no_corriente = self.crear_tabla()
+                columna_izquierda.addWidget(self.tabla_activo_no_corriente)
+                
+                tablas_layout.addLayout(columna_izquierda)
+                
+                # Columna derecha
+                columna_derecha = QVBoxLayout()
+                
+                # Tabla Pasivos
+                self.tabla_pasivos = self.crear_tabla()
+                columna_derecha.addWidget(self.tabla_pasivos)
+                
+                # Tabla Patrimonio
+                self.tabla_patrimonio = self.crear_tabla()
+                columna_derecha.addWidget(self.tabla_patrimonio)
+                
+                tablas_layout.addLayout(columna_derecha)
+                
+                content_layout.addLayout(tablas_layout)
+                
+                # Create the summary table
+                self.tabla_resumen = QTableWidget()
+                self.tabla_resumen.setColumnCount(4)
+                self.tabla_resumen.setRowCount(1)
+                self.tabla_resumen.setHorizontalHeaderLabels(["Activo total", "Valor", "Total pasivo + patrimonio", "Valor"])
+                self.tabla_resumen.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+                self.tabla_resumen.setStyleSheet("""
+                    QTableWidget {
+                        border: none;
+                        background-color: #e6ffe6;
+                    }
+                    QHeaderView::section {
+                        background-color: #c2f0c2;
+                        padding: 4px;
+                        border: 1px solid #99e699;
+                        font-weight: bold;
+                    }
+                """)
+                content_layout.addWidget(self.tabla_resumen)
             elif titulo == "Estado de resultados":
                 # Crear la tabla de estado de resultados
                 self.tabla_resultados = QTableWidget()
@@ -111,10 +168,33 @@ class Page3(QtWidgets.QWidget):
         self.page3_layout.addWidget(self.scroll_area)
         self.setLayout(self.page3_layout)
 
+    def crear_tabla(self):
+        tabla = QTableWidget()
+        tabla.setColumnCount(2)
+        tabla.setHorizontalHeaderLabels(["Cuenta", "Saldo"])
+        tabla.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        tabla.setStyleSheet("""
+            QTableWidget {
+                border: none;
+            }
+            QHeaderView::section {
+                background-color: #f0f0f0;
+                padding: 4px;
+                border: 1px solid #d0d0d0;
+                font-weight: bold;
+            }
+        """)
+        return tabla
+
     def actualizar_fechas(self, fecha_inicio, fecha_fin):
         self.subtitulo_fechas.setText(f"Desde {fecha_inicio} hasta {fecha_fin}")
         self.actualizar_tabla_balance(fecha_inicio, fecha_fin)
         self.actualizar_tabla_resultados(fecha_inicio, fecha_fin)
+        self.actualizar_tabla_activo_corriente(fecha_inicio, fecha_fin)
+        self.actualizar_tabla_activo_no_corriente(fecha_inicio, fecha_fin)
+        self.actualizar_tabla_pasivos(fecha_inicio, fecha_fin)
+        self.actualizar_tabla_patrimonio(fecha_inicio, fecha_fin)
+        self.actualizar_tabla_resumen(fecha_inicio, fecha_fin)
 
     def actualizar_tabla_balance(self, fecha_inicio, fecha_fin):
         # Aquí llamamos a la función calcularbalance
@@ -203,10 +283,9 @@ class Page3(QtWidgets.QWidget):
             self.agregar_fila_resultados(row, nombre, valor)
 
         # Colorear filas específicas
-        self.colorear_fila("Utilidad bruta", QColor(133, 238, 35))
-        self.colorear_fila("Utilidad operativa", QColor(133, 238, 35))
+        self.colorear_fila("Utilidad bruta", QColor(255, 255, 200))
+        self.colorear_fila("Utilidad operativa", QColor(255, 255, 200))
         self.colorear_fila("Utilidad antes de impuestos", QColor(255, 200, 100))
-        self.colorear_fila("Total gastos operativos", QColor(234, 85, 20))
 
         # Ajustar el tamaño de las filas y columnas
         self.tabla_resultados.resizeColumnsToContents()
@@ -224,6 +303,205 @@ class Page3(QtWidgets.QWidget):
 
         # Deshabilitar la barra de desplazamiento vertical
         self.tabla_resultados.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+    def actualizar_tabla_activo_corriente(self, fecha_inicio, fecha_fin):
+        # Obtener los datos de activo corriente
+        activo_corriente_json = situacion_activocorriente(fecha_inicio, fecha_fin)
+        activo_corriente_data = json.loads(activo_corriente_json)
+        
+        # Configurar la tabla
+        self.tabla_activo_corriente.setRowCount(len(activo_corriente_data) + 2)  # +2 para el encabezado y el total
+        
+        # Agregar el encabezado "Activo corriente"
+        header_item = QTableWidgetItem("Activo corriente")
+        header_item.setTextAlignment(QtCore.Qt.AlignCenter)
+        self.tabla_activo_corriente.setSpan(0, 0, 1, 2)
+        self.tabla_activo_corriente.setItem(0, 0, header_item)
+        
+        # Llenar la tabla con los datos
+        for row, item in enumerate(activo_corriente_data, start=1):
+            self.tabla_activo_corriente.setItem(row, 0, QTableWidgetItem(item['nombre_cuenta']))
+            self.tabla_activo_corriente.setItem(row, 1, QTableWidgetItem(f"{item['saldo']:.2f}"))
+        
+        # Agregar la fila de total
+        total_activo_corriente_json = situacion_totalactivocorriente(fecha_inicio, fecha_fin)
+        total_activo_corriente = json.loads(total_activo_corriente_json)
+        last_row = len(activo_corriente_data) + 1
+        self.tabla_activo_corriente.setItem(last_row, 0, QTableWidgetItem("Total activo corriente"))
+        self.tabla_activo_corriente.setItem(last_row, 1, QTableWidgetItem(f"{total_activo_corriente['Total_Saldo']:.2f}"))
+        
+        # Colorear la fila de total
+        for col in range(2):
+            self.tabla_activo_corriente.item(last_row, col).setBackground(QBrush(QColor(255, 255, 200)))
+        
+        # Ajustar el tamaño de las filas y columnas
+        self.tabla_activo_corriente.resizeColumnsToContents()
+        self.tabla_activo_corriente.resizeRowsToContents()
+        
+        # Deshabilitar la edición de la tabla
+        self.tabla_activo_corriente.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        # Deshabilitar la barra de desplazamiento vertical
+        self.tabla_activo_corriente.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+        # Calcular y establecer la altura total de la tabla
+        total_height = self.tabla_activo_corriente.horizontalHeader().height()
+        for i in range(self.tabla_activo_corriente.rowCount()):
+            total_height += self.tabla_activo_corriente.rowHeight(i)
+        self.tabla_activo_corriente.setFixedHeight(total_height)
+
+    def actualizar_tabla_activo_no_corriente(self, fecha_inicio, fecha_fin):
+        # Obtener los datos de activo no corriente
+        activo_no_corriente_json = situacion_activonocorriente(fecha_inicio, fecha_fin)
+        activo_no_corriente_data = json.loads(activo_no_corriente_json)
+        
+        # Configurar la tabla
+        self.tabla_activo_no_corriente.setRowCount(len(activo_no_corriente_data) + 2)  # +2 para el encabezado y el total
+        
+        # Agregar el encabezado "Activo no corriente"
+        header_item = QTableWidgetItem("Activo no corriente")
+        header_item.setTextAlignment(QtCore.Qt.AlignCenter)
+        self.tabla_activo_no_corriente.setSpan(0, 0, 1, 2)
+        self.tabla_activo_no_corriente.setItem(0, 0, header_item)
+        
+        # Llenar la tabla con los datos
+        for row, item in enumerate(activo_no_corriente_data, start=1):
+            self.tabla_activo_no_corriente.setItem(row, 0, QTableWidgetItem(item['nombre_cuenta']))
+            self.tabla_activo_no_corriente.setItem(row, 1, QTableWidgetItem(f"{item['saldo']:.2f}"))
+        
+        # Agregar la fila de total
+        total_activo_no_corriente_json = situacion_totalactivonocorriente(fecha_inicio, fecha_fin)
+        total_activo_no_corriente = json.loads(total_activo_no_corriente_json)
+        last_row = len(activo_no_corriente_data) + 1
+        self.tabla_activo_no_corriente.setItem(last_row, 0, QTableWidgetItem("Total activo no corriente"))
+        self.tabla_activo_no_corriente.setItem(last_row, 1, QTableWidgetItem(f"{total_activo_no_corriente['Total_Saldo']:.2f}"))
+        
+        # Colorear la fila de total
+        for col in range(2):
+            self.tabla_activo_no_corriente.item(last_row, col).setBackground(QBrush(QColor(255, 255, 200)))
+        
+        # Ajustar el tamaño de las filas y columnas
+        self.tabla_activo_no_corriente.resizeColumnsToContents()
+        self.tabla_activo_no_corriente.resizeRowsToContents()
+        
+        # Deshabilitar la edición de la tabla
+        self.tabla_activo_no_corriente.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        # Deshabilitar la barra de desplazamiento vertical
+        self.tabla_activo_no_corriente.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+        # Calcular y establecer la altura total de la tabla
+        total_height = self.tabla_activo_no_corriente.horizontalHeader().height()
+        for i in range(self.tabla_activo_no_corriente.rowCount()):
+            total_height += self.tabla_activo_no_corriente.rowHeight(i)
+        self.tabla_activo_no_corriente.setFixedHeight(total_height)
+
+    def actualizar_tabla_pasivos(self, fecha_inicio, fecha_fin):
+        # Obtener los datos de pasivos
+        pasivos_json = situacion_pasivo(fecha_inicio, fecha_fin)
+        pasivos_data = json.loads(pasivos_json)
+        
+        # Configurar la tabla
+        self.tabla_pasivos.setRowCount(len(pasivos_data) + 2)  # +2 para el encabezado y el total
+        
+        # Agregar el encabezado "Pasivos"
+        header_item = QTableWidgetItem("Pasivos")
+        header_item.setTextAlignment(QtCore.Qt.AlignCenter)
+        self.tabla_pasivos.setSpan(0, 0, 1, 2)
+        self.tabla_pasivos.setItem(0, 0, header_item)
+        
+        # Llenar la tabla con los datos
+        for row, item in enumerate(pasivos_data, start=1):
+            self.tabla_pasivos.setItem(row, 0, QTableWidgetItem(item['nombre_cuenta']))
+            self.tabla_pasivos.setItem(row, 1, QTableWidgetItem(f"{item['saldo']:.2f}"))
+        
+        # Agregar la fila de total
+        total_pasivos_json = situacion_totalpasivo(fecha_inicio, fecha_fin)
+        total_pasivos = json.loads(total_pasivos_json)
+        last_row = len(pasivos_data) + 1
+        self.tabla_pasivos.setItem(last_row, 0, QTableWidgetItem("Total pasivos"))
+        self.tabla_pasivos.setItem(last_row, 1, QTableWidgetItem(f"{total_pasivos['Total_Saldo']:.2f}"))
+        
+        # Colorear la fila de total
+        for col in range(2):
+            self.tabla_pasivos.item(last_row, col).setBackground(QBrush(QColor(255, 255, 200)))
+        
+        # Ajustar el tamaño de las filas y columnas
+        self.tabla_pasivos.resizeColumnsToContents()
+        self.tabla_pasivos.resizeRowsToContents()
+        
+        # Deshabilitar la edición de la tabla
+        self.tabla_pasivos.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        # Deshabilitar la barra de desplazamiento vertical
+        self.tabla_pasivos.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+        # Calcular y establecer la altura total de la tabla
+        total_height = self.tabla_pasivos.horizontalHeader().height()
+        for i in range(self.tabla_pasivos.rowCount()):
+            total_height += self.tabla_pasivos.rowHeight(i)
+        self.tabla_pasivos.setFixedHeight(total_height)
+
+    def actualizar_tabla_patrimonio(self, fecha_inicio, fecha_fin):
+        # Obtener los datos de patrimonio
+        patrimonio_json = situacion_patrimonio(fecha_inicio, fecha_fin)
+        patrimonio_data = json.loads(patrimonio_json)
+        
+        # Obtener utilidades acumuladas
+        utilidad_acumulada_json = utilidadantes(fecha_inicio, fecha_fin)
+        utilidad_acumulada = json.loads(utilidad_acumulada_json)['utilidad_antes_impuestos']
+        
+        # Configurar la tabla
+        self.tabla_patrimonio.setRowCount(len(patrimonio_data) + 3)  # +3 para el encabezado, utilidades acumuladas y total
+        
+        # Agregar el encabezado "Patrimonio"
+        header_item = QTableWidgetItem("Patrimonio")
+        header_item.setTextAlignment(QtCore.Qt.AlignCenter)
+        self.tabla_patrimonio.setSpan(0, 0, 1, 2)
+        self.tabla_patrimonio.setItem(0, 0, header_item)
+        
+        # Llenar la tabla con los datos
+        total_patrimonio = 0
+        for row, item in enumerate(patrimonio_data, start=1):
+            self.tabla_patrimonio.setItem(row, 0, QTableWidgetItem(item['nombre_cuenta']))
+            self.tabla_patrimonio.setItem(row, 1, QTableWidgetItem(f"{item['saldo']:.2f}"))
+            total_patrimonio += item['saldo']
+        
+        # Agregar fila de utilidades acumuladas
+        row = len(patrimonio_data) + 1
+        self.tabla_patrimonio.setItem(row, 0, QTableWidgetItem("Utilidades acumuladas"))
+        self.tabla_patrimonio.setItem(row, 1, QTableWidgetItem(f"{utilidad_acumulada:.2f}"))
+        
+        # Colorear la fila de utilidades acumuladas de naranja
+        for col in range(2):
+            self.tabla_patrimonio.item(row, col).setBackground(QBrush(QColor(255, 200, 100)))
+        
+        total_patrimonio += utilidad_acumulada
+        
+        # Agregar fila de total patrimonio
+        row = len(patrimonio_data) + 2
+        self.tabla_patrimonio.setItem(row, 0, QTableWidgetItem("Total patrimonio"))
+        self.tabla_patrimonio.setItem(row, 1, QTableWidgetItem(f"{total_patrimonio:.2f}"))
+        
+        # Colorear la fila de total patrimonio de amarillo claro
+        for col in range(2):
+            self.tabla_patrimonio.item(row, col).setBackground(QBrush(QColor(255, 255, 200)))
+        
+        # Ajustar el tamaño de las filas y columnas
+        self.tabla_patrimonio.resizeColumnsToContents()
+        self.tabla_patrimonio.resizeRowsToContents()
+        
+        # Deshabilitar la edición de la tabla
+        self.tabla_patrimonio.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        # Deshabilitar la barra de desplazamiento vertical
+        self.tabla_patrimonio.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+        # Calcular y establecer la altura total de la tabla
+        total_height = self.tabla_patrimonio.horizontalHeader().height()
+        for i in range(self.tabla_patrimonio.rowCount()):
+            total_height += self.tabla_patrimonio.rowHeight(i)
+        self.tabla_patrimonio.setFixedHeight(total_height)
 
     def agregar_fila_resultados(self, row, nombre, valor):
         item_nombre = QTableWidgetItem(nombre)
@@ -243,4 +521,36 @@ class Page3(QtWidgets.QWidget):
                 for col in range(self.tabla_resultados.columnCount()):
                     self.tabla_resultados.item(row, col).setBackground(QBrush(color))
                 break
+
+    def actualizar_tabla_resumen(self, fecha_inicio, fecha_fin):
+        # Obtain the necessary totals
+        total_activo_corriente = json.loads(situacion_totalactivocorriente(fecha_inicio, fecha_fin))['Total_Saldo']
+        total_activo_no_corriente = json.loads(situacion_totalactivonocorriente(fecha_inicio, fecha_fin))['Total_Saldo']
+        total_pasivo = json.loads(situacion_totalpasivo(fecha_inicio, fecha_fin))['Total_Saldo']
+    
+        # Calculate the total equity (including accumulated earnings)
+        patrimonio_data = json.loads(situacion_patrimonio(fecha_inicio, fecha_fin))
+        utilidad_acumulada = json.loads(utilidadantes(fecha_inicio, fecha_fin))['utilidad_antes_impuestos']
+        total_patrimonio = sum(item['saldo'] for item in patrimonio_data) + utilidad_acumulada
+
+        # Calculate the totals
+        activo_total = total_activo_corriente + total_activo_no_corriente
+        pasivo_patrimonio_total = total_pasivo + total_patrimonio
+
+        # Fill the table with data
+        self.tabla_resumen.setItem(0, 0, QTableWidgetItem("Activo total"))
+        self.tabla_resumen.setItem(0, 1, QTableWidgetItem(f"{activo_total:.2f}"))
+        self.tabla_resumen.setItem(0, 2, QTableWidgetItem("Total pasivo + patrimonio"))
+        self.tabla_resumen.setItem(0, 3, QTableWidgetItem(f"{pasivo_patrimonio_total:.2f}"))
+
+        # Adjust the size of rows and columns
+        self.tabla_resumen.resizeColumnsToContents()
+        self.tabla_resumen.resizeRowsToContents()
+
+        # Disable table editing
+        self.tabla_resumen.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        # Calculate and set the total height of the table
+        total_height = self.tabla_resumen.horizontalHeader().height() + self.tabla_resumen.rowHeight(0)
+        self.tabla_resumen.setFixedHeight(total_height)
 

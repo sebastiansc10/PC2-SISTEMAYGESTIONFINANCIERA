@@ -7,7 +7,7 @@ from datetime import datetime
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from app.funciones.EstadoResultados import calcularresultado
-from app.funciones.EstadoResultados import calcular_estado_resultados
+from app.funciones.EstadoResultados import calcular_estado_resultados, utilidadantes
 
 # 🔹 Captura de fechas desde argumentos o valores por defecto
 if len(sys.argv) == 3:
@@ -27,4 +27,7 @@ except ValueError:
 
 # 🔹 Ejecutar la función y mostrar el resultado
 json_salida = calcular_estado_resultados(fechainicio, fechafin)
+print(json_salida)
+
+json_salida = utilidadantes(fechainicio, fechafin)
 print(json_salida)
