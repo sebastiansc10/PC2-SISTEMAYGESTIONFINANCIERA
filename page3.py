@@ -1,7 +1,8 @@
 import json
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QVBoxLayout, QScrollArea, QDateEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView
-from app.funciones.EstadoSituacion import calcularbalance
+from PyQt5.QtGui import QColor, QBrush
+from app.funciones.EstadoSituacion import calcularbalance, total_debe, total_haber
 
 class Page3(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -106,7 +107,7 @@ class Page3(QtWidgets.QWidget):
         balance_data = json.loads(balance_json)
 
         # Configurar la tabla
-        self.tabla_balance.setRowCount(len(balance_data))
+        self.tabla_balance.setRowCount(len(balance_data) + 1)  # +1 para la fila de total
 
         # Llenar la tabla con los datos
         for row, item in enumerate(balance_data):
@@ -114,6 +115,28 @@ class Page3(QtWidgets.QWidget):
             self.tabla_balance.setItem(row, 1, QTableWidgetItem(item['nombre_cuenta']))
             self.tabla_balance.setItem(row, 2, QTableWidgetItem(f"{item['debe']:.2f}"))
             self.tabla_balance.setItem(row, 3, QTableWidgetItem(f"{item['haber']:.2f}"))
+
+        # Agregar la fila de total
+        last_row = len(balance_data)
+        self.tabla_balance.setSpan(last_row, 0, 1, 2)  # Fusionar las dos primeras columnas
+        total_item = QTableWidgetItem("Total:")
+        total_item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.tabla_balance.setItem(last_row, 0, total_item)
+
+        # Obtener y mostrar los totales
+        total_debe_valor = total_debe(fecha_inicio, fecha_fin)
+        total_haber_valor = total_haber(fecha_inicio, fecha_fin)
+
+        debe_item = QTableWidgetItem(f"{total_debe_valor:.2f}")
+        haber_item = QTableWidgetItem(f"{total_haber_valor:.2f}")
+
+        # Establecer el color de fondo para las celdas de total
+        color_total = QColor(255, 255, 200)  # Amarillo claro
+        debe_item.setBackground(QBrush(color_total))
+        haber_item.setBackground(QBrush(color_total))
+
+        self.tabla_balance.setItem(last_row, 2, debe_item)
+        self.tabla_balance.setItem(last_row, 3, haber_item)
 
         # Ajustar el tamaño de las filas y columnas
         self.tabla_balance.resizeColumnsToContents()
@@ -128,7 +151,6 @@ class Page3(QtWidgets.QWidget):
         self.tabla_balance.setFixedHeight(total_height)
         
         self.tabla_balance.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
 
         # Deshabilitar la barra de desplazamiento vertical
         self.tabla_balance.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
