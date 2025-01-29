@@ -103,7 +103,7 @@ class Page2(QtWidgets.QWidget):
         """Obtiene los datos de la base de datos y los devuelve en formato lista."""
         resultado_json = mostrar_diario()
         resultado = json.loads(resultado_json)
-        return [(glosa, fecha) for fecha, glosa in resultado.items()]
+        return [(diario["glosa"], diario["fecha"]) for diario in resultado]  # Se ajusta a la nueva estructura JSON
 
     def poblar_tabla(self, datos):
         """Llena la tabla y agrega QDateEdit en la columna Fecha."""

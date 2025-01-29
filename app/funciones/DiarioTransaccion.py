@@ -11,14 +11,17 @@ def decimal_default(obj):
     raise TypeError("Type not serializable")
 
 def mostrar_diario():
-    """Devuelve un JSON con las cuentas disponibles en la tabla Diario."""
+    """Devuelve un JSON con las cuentas disponibles en la tabla Diario como una lista de diccionarios."""
     with obtener_conexion() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT fecha, glosa FROM diario d ORDER BY fecha ASC;")
+            cursor.execute("SELECT fecha, glosa FROM diario ORDER BY fecha ASC;")
             cuentas = cursor.fetchall()
-            # Convertir las fechas a cadenas de texto
-            resultado = {cuenta[0].strftime('%Y-%m-%d'): cuenta[1] for cuenta in cuentas}
-            return json.dumps(resultado)  # Convierte el diccionario a JSON
+
+            # Convertimos la lista de tuplas en una lista de diccionarios
+            resultado = [{"fecha": cuenta[0].strftime('%Y-%m-%d'), "glosa": cuenta[1]} for cuenta in cuentas]
+
+            return json.dumps(resultado, indent=4, ensure_ascii=False)  # Convierte la lista a JSON
+
 
 
 def registrar_diario(fecha, glosa):
