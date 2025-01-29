@@ -8,17 +8,25 @@ from PyQt5.QtCore import QDate
 from app.funciones.DiarioTransaccion import mostrar_diario
 
 class Page2(QtWidgets.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, main_window, parent=None):
+        """
+        Página de Diarios con tabla de registros.
+        :param main_window: Instancia de la ventana principal (para cambiar de página).
+        """
         super().__init__(parent)
+        self.main_window = main_window  # Referencia al main_window para cambiar de página
         self.setup_ui()
 
     def setup_ui(self):
+        """Configura la interfaz gráfica de la página."""
         self.page2_layout = QVBoxLayout(self)
 
+        # ✅ Título
         self.label = QtWidgets.QLabel("📜 Diarios Registrados")
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setStyleSheet("font-size: 18px; font-weight: bold; margin-bottom: 10px;")
 
+        # ✅ Barra de búsqueda
         self.search_bar = QLineEdit()
         self.search_bar.setPlaceholderText("🔍 Buscar en glosas...")
         self.search_bar.setStyleSheet("""
@@ -28,6 +36,7 @@ class Page2(QtWidgets.QWidget):
         """)
         self.search_bar.textChanged.connect(self.filtrar_tabla)
 
+        # ✅ Tabla de Diarios
         self.tableWidget = QTableWidget()
         self.tableWidget.setColumnCount(2)
         self.tableWidget.setHorizontalHeaderLabels(["📝 Glosa", "📅 Fecha"])
@@ -52,23 +61,32 @@ class Page2(QtWidgets.QWidget):
             }
         """)
 
+        # ✅ Botones de Acción
         self.btn_add = QPushButton("➕ Agregar Fila")
         self.btn_delete = QPushButton("🗑️ Eliminar Fila")
         self.btn_export = QPushButton("📤 Exportar CSV")
+        self.btn_back = QPushButton("🔙 Volver al Inicio")  # Nuevo botón para volver
 
+        # ✅ Estilos de Botones
         self.btn_add.setStyleSheet("background-color: #009688; color: white; padding: 8px; border-radius: 5px;")
         self.btn_delete.setStyleSheet("background-color: #e74c3c; color: white; padding: 8px; border-radius: 5px;")
         self.btn_export.setStyleSheet("background-color: #f39c12; color: white; padding: 8px; border-radius: 5px;")
+        self.btn_back.setStyleSheet("background-color: #34495E; color: white; padding: 8px; border-radius: 5px;")
 
+        # ✅ Conexión de los botones
         self.btn_add.clicked.connect(self.agregar_fila)
         self.btn_delete.clicked.connect(self.eliminar_fila)
         self.btn_export.clicked.connect(self.exportar_csv)
+        self.btn_back.clicked.connect(self.volver_al_inicio)  # Conecta botón de volver
 
+        # ✅ Diseño de los botones
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.btn_add)
         btn_layout.addWidget(self.btn_delete)
         btn_layout.addWidget(self.btn_export)
+        btn_layout.addWidget(self.btn_back)  # Agrega el botón de volver
 
+        # ✅ Agregar widgets al layout
         self.page2_layout.addWidget(self.label)
         self.page2_layout.addWidget(self.search_bar)
         self.page2_layout.addWidget(self.tableWidget)
@@ -76,7 +94,7 @@ class Page2(QtWidgets.QWidget):
         self.setLayout(self.page2_layout)
 
     def obtener_diarios(self):
-        """Obtiene los datos de la base de datos."""
+        """Obtiene los datos de la base de datos y los devuelve en formato lista."""
         resultado_json = mostrar_diario()
         resultado = json.loads(resultado_json)
         return [(glosa, fecha) for fecha, glosa in resultado.items()]
@@ -133,3 +151,6 @@ class Page2(QtWidgets.QWidget):
                     file.write(f"{glosa},{fecha}\n")
             QMessageBox.information(self, "Éxito", "El archivo CSV ha sido guardado correctamente.")
 
+    def volver_al_inicio(self):
+        """Vuelve a la página principal en el stackedWidget."""
+        self.main_window.stackedWidget.setCurrentIndex(0)  # Cambia a la página principal
