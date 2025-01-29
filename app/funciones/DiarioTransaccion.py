@@ -242,3 +242,47 @@ def diariotransaccion(fechainicio, fechafin):
                         resultado[key] = convertir_valores(value)
 
     return json.dumps(resultados_dict, indent=4, ensure_ascii=False)
+
+def registrar_nueva_transaccion(id_cuenta, dh, cantidad, glosa, fecha):
+    """
+    Registra una nueva transacción para un diario existente.
+    
+    Args:
+        id_cuenta: ID de la cuenta
+        dh: 'Debe' o 'Haber'
+        cantidad: Monto de la transacción
+        glosa: Glosa del diario existente
+        fecha: Fecha del diario existente
+    
+    Returns:
+        bool: True si se registró correctamente, False en caso contrario
+    """
+    try:
+        with obtener_conexion() as conn:
+            with conn.cursor() as cursor:
+                # Primero obtener el ID del diario
+                cursor.execute(
+                    "SELECT id_diario FROM diario WHERE glosa = %s AND fecha = %s",
+                    (glosa, fecha)
+                )
+                resultado = cursor.fetchone()
+                if not resultado:
+                    print("❌ No se encontró el diario especificado")
+                    return False
+                
+                id_diario = resultado[0]
+                
+                # Registrar la nueva transacción
+                cursor.execute("""
+                    INSERT INTO Transaccion (Cantidad, DH, ID_Diario, ID_Cuenta)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING ID_Transaccion;
+                """, (cantidad, dh, id_diario, id_cuenta))
+                
+                id_transaccion = cursor.fetchone()[0]
+                conn.commit()
+                print(f"✅ Transacción registrada con ID {id_transaccion}")
+                return True
+    except Exception as e:
+        print(f"❌ Error al registrar la transacción: {e}")
+        return False
