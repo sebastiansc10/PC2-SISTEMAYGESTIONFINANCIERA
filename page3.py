@@ -10,12 +10,14 @@ from app.funciones.EstadoSituacion import (
     situacion_patrimonio
 )
 from app.funciones.EstadoResultados import calcular_estado_resultados, utilidadantes
-from app.funciones.DiarioTransaccion import diariotransaccion  # Add this import
+from app.funciones.DiarioTransaccion import diariotransaccion # Add mayorizartransacciones
+from app.funciones.Mayorizar_BalanceComprobación import mayorizartransacciones
 
 class Page3(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.diario_tables = []  # To store references to diario tables
+        self.mayorizacion_tables = []  # To store references to mayorizacion tables
         self.setup_ui()
 
     def setup_ui(self):
@@ -80,6 +82,12 @@ class Page3(QtWidgets.QWidget):
                 self.diario_layout = QVBoxLayout(self.diario_container)
                 self.diario_layout.setSpacing(20)  # Add spacing between tables
                 content_layout.addWidget(self.diario_container)
+            elif titulo == "Mayorización":
+                # Create a container widget for mayorizacion tables
+                self.mayorizacion_container = QtWidgets.QWidget()
+                self.mayorizacion_layout = QVBoxLayout(self.mayorizacion_container)
+                self.mayorizacion_layout.setSpacing(20)  # Add spacing between tables
+                content_layout.addWidget(self.mayorizacion_container)
             elif titulo == "Balanza de comprobación":
                 # Crear la tabla de balance de comprobación
                 self.tabla_balance = QTableWidget()
@@ -204,6 +212,7 @@ class Page3(QtWidgets.QWidget):
         self.actualizar_tabla_patrimonio(fecha_inicio, fecha_fin)
         self.actualizar_tabla_resumen(fecha_inicio, fecha_fin)
         self.actualizar_diarios(fecha_inicio, fecha_fin)
+        self.actualizar_mayorizacion(fecha_inicio, fecha_fin)  # Add this line
 
     def actualizar_tabla_balance(self, fecha_inicio, fecha_fin):
         # Aquí llamamos a la función calcularbalance
@@ -638,9 +647,7 @@ class Page3(QtWidgets.QWidget):
             tabla.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
             # Add table to layout
-            self.diario_layout.addWidget(tabla)
-
-            # Create glosa label
+            self.diario_layout.addWidget(tabla)            # Create glosa label
             glosa_label = QtWidgets.QLabel(f"Glosa: {diario['glosa']}")
             glosa_label.setStyleSheet("""
                 font-style: italic;
@@ -656,15 +663,133 @@ class Page3(QtWidgets.QWidget):
             self.diario_tables.append(tabla)
 
 
-    # [Rest of the existing methods remain thediario_tables.append(tabla)
+    def crear_tabla_mayorizacion(self, id_cuenta, nombre_cuenta):
+        """Create a new table for mayorizacion entries"""
+        tabla = QTableWidget()
+        tabla.setColumnCount(3)
+        tabla.setHorizontalHeaderLabels([
+            "Fecha",
+            "Debe",
+            "Haber"
+        ])
+        
+        # Set the table title
+        title_label = QtWidgets.QLabel(f"{id_cuenta} - {nombre_cuenta}")
+        title_label.setStyleSheet("""
+            font-weight: bold;
+            font-size: 14px;
+            padding: 5px;
+        """)
+        self.mayorizacion_layout.addWidget(title_label)
+        
+        tabla.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        tabla.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #d0d0d0;
+                border-radius: 4px;
+            }
+            QHeaderView::section {
+                background-color: #f0f0f0;
+                padding: 4px;
+                border: 1px solid #d0d0d0;
+                font-weight: bold;
+            }
+        """)
+        tabla.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        return tabla
 
+    def actualizar_mayorizacion(self, fecha_inicio, fecha_fin):
+        """Update the mayorizacion tables with new data"""
+        # Clear existing tables
+        for tabla in self.mayorizacion_tables:
+            self.mayorizacion_layout.removeWidget(tabla)
+            tabla.deleteLater()
+        self.mayorizacion_tables.clear()
 
-    # [Rest of the existing methods remain the same]
+        # Get new data
+        mayorizacion_json = mayorizartransacciones(fecha_inicio, fecha_fin)
+        mayorizacion_data = json.loads(mayorizacion_json)
+
+        # Group transactions by account
+        cuentas = {}
+        for trans in mayorizacion_data:
+            key = (trans['id_cuenta'], trans['nombre_cuenta'])
+            if key not in cuentas:
+                cuentas[key] = []
+            cuentas[key].append(trans)
+
+        # Create tables for each account
+        for (id_cuenta, nombre_cuenta), transacciones in cuentas.items():
+            # Create table
+            tabla = self.crear_tabla_mayorizacion(id_cuenta, nombre_cuenta)
+            tabla.setRowCount(len(transacciones) + 1)  # +1 for saldo row
+
+            # Fill table with transactions
+            total_debe = 0
+            total_haber = 0
+            for row, trans in enumerate(transacciones):
+                tabla.setItem(row, 0, QTableWidgetItem(trans['fecha']))
+                
+                if trans['dh'] == 'Debe':
+                    tabla.setItem(row, 1, QTableWidgetItem(f"{trans['cantidad']:.2f}"))
+                    tabla.setItem(row, 2, QTableWidgetItem("0.00"))
+                    total_debe += trans['cantidad']
+                else:
+                    tabla.setItem(row, 1, QTableWidgetItem("0.00"))
+                    tabla.setItem(row, 2, QTableWidgetItem(f"{trans['cantidad']:.2f}"))
+                    total_haber += trans['cantidad']
+
+            # Calculate and add saldo row
+            last_row = len(transacciones)
+            saldo = total_debe - total_haber
+            
+            saldo_item = QTableWidgetItem("Saldo")
+            saldo_item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            tabla.setItem(last_row, 0, saldo_item)
+            
+            if saldo >= 0:
+                tabla.setItem(last_row, 1, QTableWidgetItem(f"{abs(saldo):.2f}"))
+                tabla.setItem(last_row, 2, QTableWidgetItem("0.00"))
+            else:
+                tabla.setItem(last_row, 1, QTableWidgetItem("0.00"))
+                tabla.setItem(last_row, 2, QTableWidgetItem(f"{abs(saldo):.2f}"))
+
+            # Color the saldo row
+            for col in range(3):
+                if tabla.item(last_row, col):
+                    tabla.item(last_row, col).setBackground(QBrush(QColor(255, 255, 200)))
+
+            # Adjust table height
+            tabla.resizeRowsToContents()
+            total_height = tabla.horizontalHeader().height()
+            for i in range(tabla.rowCount()):
+                total_height += tabla.rowHeight(i)
+            tabla.setFixedHeight(total_height)
+            tabla.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+            # Add table to layout
+            self.mayorizacion_layout.addWidget(tabla)
+            
+            # Add spacing between tables
+            self.mayorizacion_layout.addSpacing(20)
+
+            # Store reference to table
+            self.mayorizacion_tables.append(tabla)
 
     def closeEvent(self, event):
+        # Clear diario tables
         for tabla in self.diario_tables:
             self.diario_layout.removeWidget(tabla)
             tabla.deleteLater()
         self.diario_tables.clear()
+        
+        # Clear mayorizacion tables
+        for tabla in self.mayorizacion_tables:
+            self.mayorizacion_layout.removeWidget(tabla)
+            tabla.deleteLater()
+        self.mayorizacion_tables.clear()
+        
         event.accept()
+
+    # [Rest of the existing methods remain the same]
 
