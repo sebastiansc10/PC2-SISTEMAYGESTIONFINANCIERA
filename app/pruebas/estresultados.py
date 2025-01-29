@@ -6,6 +6,7 @@ from datetime import datetime
 # Agregar la ruta raíz del proyecto al PYTHONPATH dinámicamente
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
+from app.funciones.EstadoResultados import calcularresultado
 from app.funciones.EstadoResultados import calcular_estado_resultados
 
 # 🔹 Captura de fechas desde argumentos o valores por defecto

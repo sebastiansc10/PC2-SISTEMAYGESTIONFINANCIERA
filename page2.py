@@ -1,3 +1,4 @@
+# ES LA PÁGINA RELACIONADA A LOS DIARIOS
 import json
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import (
