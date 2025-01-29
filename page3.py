@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QVBoxLayout, QScrollArea, QDateEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtGui import QColor, QBrush
 from app.funciones.EstadoSituacion import calcularbalance, total_debe, total_haber
+from app.funciones.EstadoResultados import calcular_estado_resultados
 
 class Page3(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -83,6 +84,19 @@ class Page3(QtWidgets.QWidget):
                     }
                 """)
                 content_layout.addWidget(self.tabla_balance)
+            elif titulo == "Estado de resultados":
+                # Crear la tabla de estado de resultados
+                self.tabla_resultados = QTableWidget()
+                self.tabla_resultados.setColumnCount(2)
+                self.tabla_resultados.setHorizontalHeaderLabels(["", ""])
+                self.tabla_resultados.horizontalHeader().setVisible(False)
+                self.tabla_resultados.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+                self.tabla_resultados.setStyleSheet("""
+                    QTableWidget {
+                        border: none;
+                    }
+                """)
+                content_layout.addWidget(self.tabla_resultados)
             else:
                 # Agregar contenido de ejemplo para otras secciones
                 for i in range(5):
@@ -100,6 +114,7 @@ class Page3(QtWidgets.QWidget):
     def actualizar_fechas(self, fecha_inicio, fecha_fin):
         self.subtitulo_fechas.setText(f"Desde {fecha_inicio} hasta {fecha_fin}")
         self.actualizar_tabla_balance(fecha_inicio, fecha_fin)
+        self.actualizar_tabla_resultados(fecha_inicio, fecha_fin)
 
     def actualizar_tabla_balance(self, fecha_inicio, fecha_fin):
         # Aquí llamamos a la función calcularbalance
@@ -154,4 +169,76 @@ class Page3(QtWidgets.QWidget):
 
         # Deshabilitar la barra de desplazamiento vertical
         self.tabla_balance.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+    def actualizar_tabla_resultados(self, fecha_inicio, fecha_fin):
+        # Llamar a la función calcular_estado_resultados
+        resultados_json = calcular_estado_resultados(fecha_inicio, fecha_fin)
+        resultados_data = json.loads(resultados_json)
+
+        # Preparar los datos para la tabla
+        datos_tabla = []
+        datos_tabla.append(("Ventas", resultados_data["ventas"]))
+        datos_tabla.append(("Costo de ventas", resultados_data["costo_ventas"]))
+        datos_tabla.append(("Utilidad bruta", resultados_data["utilidad_bruta"]))
+        datos_tabla.append(("Gastos operativos", ""))
+        for gasto, valor in resultados_data["gastos_operativos"]["detalle"].items():
+            datos_tabla.append((f"  {gasto}", valor))
+        datos_tabla.append(("Total gastos operativos", resultados_data["gastos_operativos"]["total_gastos_operativos"]))
+        datos_tabla.append(("Utilidad operativa", resultados_data["utilidad_operativa"]))
+        datos_tabla.append(("Otros ingresos", resultados_data["otros_ingresos"]))
+        datos_tabla.append(("Pérdidas", resultados_data["perdidas"]))
+        datos_tabla.append(("Utilidad antes de impuestos", resultados_data["utilidad_antes_impuestos"]))
+        datos_tabla.append(("Impuesto a la renta", resultados_data["impuesto_renta"]))
+        datos_tabla.append(("Utilidad neta", resultados_data["utilidad_neta"]))
+
+        # Filtrar filas en blanco
+        datos_tabla = [fila for fila in datos_tabla if fila[1] != "" and fila[1] != 0]
+
+        # Configurar la tabla
+        self.tabla_resultados.setRowCount(len(datos_tabla))
+
+        # Llenar la tabla con los datos
+        for row, (nombre, valor) in enumerate(datos_tabla):
+            self.agregar_fila_resultados(row, nombre, valor)
+
+        # Colorear filas específicas
+        self.colorear_fila("Utilidad bruta", QColor(255, 255, 200))
+        self.colorear_fila("Utilidad operativa", QColor(255, 255, 200))
+        self.colorear_fila("Utilidad antes de impuestos", QColor(255, 200, 100))
+
+        # Ajustar el tamaño de las filas y columnas
+        self.tabla_resultados.resizeColumnsToContents()
+        self.tabla_resultados.resizeRowsToContents()
+
+        # Calcular y establecer la altura total de la tabla
+        total_height = self.tabla_resultados.horizontalHeader().height()
+        for i in range(self.tabla_resultados.rowCount()):
+            total_height += self.tabla_resultados.rowHeight(i)
+
+        # Establecer la altura fija de la tabla
+        self.tabla_resultados.setFixedHeight(total_height)
+
+        self.tabla_resultados.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        # Deshabilitar la barra de desplazamiento vertical
+        self.tabla_resultados.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+    def agregar_fila_resultados(self, row, nombre, valor):
+        item_nombre = QTableWidgetItem(nombre)
+        item_nombre.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        self.tabla_resultados.setItem(row, 0, item_nombre)
+
+        if isinstance(valor, (int, float)):
+            item_valor = QTableWidgetItem(f"{valor:.2f}")
+        else:
+            item_valor = QTableWidgetItem(str(valor))
+        item_valor.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.tabla_resultados.setItem(row, 1, item_valor)
+
+    def colorear_fila(self, nombre_fila, color):
+        for row in range(self.tabla_resultados.rowCount()):
+            if self.tabla_resultados.item(row, 0).text() == nombre_fila:
+                for col in range(self.tabla_resultados.columnCount()):
+                    self.tabla_resultados.item(row, col).setBackground(QBrush(color))
+                break
 
