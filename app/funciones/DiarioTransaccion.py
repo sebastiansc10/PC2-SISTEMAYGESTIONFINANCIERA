@@ -1,6 +1,14 @@
 import decimal
 from app.db_connection import obtener_conexion
 import json
+from decimal import Decimal
+from datetime import date
+
+
+def decimal_default(obj):
+    if isinstance(obj, decimal.Decimal):
+        return float(obj)  # Convierte Decimal a float
+    raise TypeError("Type not serializable")
 
 def mostrar_diario():
     """Devuelve un JSON con las cuentas disponibles en la tabla Diario."""
@@ -127,3 +135,55 @@ def mostrar_transacciones(glosa, fecha):
             ]
             
             return json.dumps(resultado, indent=4, ensure_ascii=False, default=decimal_default)  # Convierte a JSON
+        
+
+
+def diariotransaccion(fechainicio, fechafin):
+    with obtener_conexion() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT 
+                    d.fecha,
+                    d.glosa,
+                    json_agg(
+                        json_build_object(
+                            'cantidad', t.cantidad,
+                            'dh', t.dh,
+                            'id_cuenta', c.id_cuenta,
+                            'nombre_cuenta', c.nombre_cuenta
+                        )
+                    ) AS transacciones
+                FROM diario d
+                INNER JOIN transaccion t ON d.id_diario = t.id_diario
+                INNER JOIN cuenta c ON c.id_cuenta = t.id_cuenta
+                WHERE (%s <= d.fecha AND d.fecha <= %s)
+                GROUP BY d.fecha, d.glosa
+                ORDER BY d.fecha;
+                """,
+                (fechainicio, fechafin)  
+            )
+            resultados = cursor.fetchall()
+            columnas = [desc[0] for desc in cursor.description]
+            resultados_dict = [dict(zip(columnas, fila)) for fila in resultados]
+
+            # Convertir valores no serializables
+            def convertir_valores(obj):
+                if isinstance(obj, decimal.Decimal):
+                    return float(obj)
+                elif isinstance(obj, date):  # Convierte date a string
+                    return obj.isoformat()
+                return obj
+
+            # Aplicamos la conversión a cada diccionario
+            for resultado in resultados_dict:
+                for key, value in resultado.items():
+                    if isinstance(value, list):  # Si 'transacciones' es una lista, iteramos
+                        resultado[key] = [
+                            {k: convertir_valores(v) for k, v in transaccion.items()}
+                            for transaccion in value
+                        ]
+                    else:
+                        resultado[key] = convertir_valores(value)
+
+    return json.dumps(resultados_dict, indent=4, ensure_ascii=False)

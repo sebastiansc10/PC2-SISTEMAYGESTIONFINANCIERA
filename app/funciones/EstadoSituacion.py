@@ -40,6 +40,17 @@ def decimal_default(obj):
     raise TypeError("Type not serializable")
 
 
+"""
+def decimal_default(obj):
+    if isinstance(obj, Decimal):
+        return float(obj)  # Convierte Decimal a float
+    try:
+        return str(obj)  # Intentar convertir el objeto a string
+    except Exception as e:
+        print(f"Error al serializar: {type(obj)} -> {obj}")
+        raise TypeError(f"Error al serializar el objeto: {obj} del tipo {type(obj)}") from e
+"""
+
 def calcularbalance(fechainicio, fechafin):
     with obtener_conexion() as conn:
         with conn.cursor() as cursor:
