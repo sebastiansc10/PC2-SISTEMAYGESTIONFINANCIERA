@@ -143,17 +143,32 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.page_3 = QtWidgets.QWidget()
         self.page3_layout = QVBoxLayout(self.page_3)
 
-        self.label_3 = QtWidgets.QLabel("Registros contables")
-        self.label_3.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_3.setStyleSheet("font-size: 18px; font-weight: bold; margin-bottom: 20px;")
+        # Título principal
+        self.titulo_principal = QtWidgets.QLabel("Estado de situación financiera")
+        self.titulo_principal.setAlignment(QtCore.Qt.AlignCenter)
+        self.titulo_principal.setStyleSheet("""
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #2C3E50;
+    """)
+
+        # Subtítulo con fechas
+        self.subtitulo_fechas = QtWidgets.QLabel()
+        self.subtitulo_fechas.setAlignment(QtCore.Qt.AlignCenter)
+        self.subtitulo_fechas.setStyleSheet("""
+        font-size: 16px;
+        margin-bottom: 20px;
+        color: #34495E;
+    """)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setStyleSheet("""
-            background-color: #ffffff;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-        """)
+        background-color: #ffffff;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+    """)
 
         content_widget = QtWidgets.QWidget()
         content_layout = QVBoxLayout(content_widget)
@@ -164,7 +179,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             content_layout.addWidget(label)
 
         self.scroll_area.setWidget(content_widget)
-        self.page3_layout.addWidget(self.label_3)
+
+        self.page3_layout.addWidget(self.titulo_principal)
+        self.page3_layout.addWidget(self.subtitulo_fechas)
         self.page3_layout.addWidget(self.scroll_area)
         self.page_3.setLayout(self.page3_layout)
         self.stackedWidget.addWidget(self.page_3)
@@ -220,9 +237,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.formulario_reporte.show()
 
     def generar_reporte(self):
-        """Guardar las fechas y cambiar a la página 3."""
-        self.fechainicio = self.fecha_inicio.date().toString("yyyy-MM-dd")
-        self.fechafin = self.fecha_cierre.date().toString("yyyy-MM-dd")
+        """Guardar las fechas, actualizar el subtítulo y cambiar a la página 3."""
+        self.fechainicio = self.fecha_inicio.date().toString("dd/MM/yyyy")
+        self.fechafin = self.fecha_cierre.date().toString("dd/MM/yyyy")
+    
+        # Actualizar el subtítulo con las fechas
+        self.subtitulo_fechas.setText(f"Desde {self.fechainicio} hasta {self.fechafin}")
+    
         self.stackedWidget.setCurrentIndex(2)  # Cambia a la página de reportes
         self.formulario_reporte.close()  # Cierra el formulario
 
