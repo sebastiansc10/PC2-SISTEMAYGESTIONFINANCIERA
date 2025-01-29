@@ -1,4 +1,3 @@
-# ES LA PÁGINA RELACIONADA A LOS DIARIOS
 import json
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import (
@@ -6,8 +5,19 @@ from PyQt5.QtWidgets import (
     QLineEdit, QMessageBox, QFileDialog, QHeaderView, QTableWidget
 )
 from PyQt5.QtCore import QDate
-from app.funciones.DiarioTransaccion import mostrar_diario,mostrar_transacciones
+from app.funciones.DiarioTransaccion import mostrar_diario, mostrar_transacciones, registrar_diario
 from page4 import Page4
+
+class CustomTableItem(QTableWidgetItem):
+    def __init__(self, text):
+        super().__init__(text)
+        self.original_text = "(Nuevo)"
+        
+    def setText(self, text):
+        # Ensure "(Nuevo)" prefix is always present
+        if not text.startswith("(Nuevo)"):
+            text = "(Nuevo)" + text
+        super().setText(text)
 
 class Page2(QtWidgets.QWidget):
     def __init__(self, main_window, parent=None):
@@ -67,30 +77,34 @@ class Page2(QtWidgets.QWidget):
         self.btn_add = QPushButton("➕ Agregar Fila")
         self.btn_delete = QPushButton("🗑️ Eliminar Fila")
         self.btn_export = QPushButton("📤 Exportar CSV")
-        self.btn_view_transaction = QPushButton("🔍 Ver Transacción")  # Nuevo botón
-        self.btn_back = QPushButton("🔙 Volver al Inicio")  # Botón de volver
+        self.btn_view_transaction = QPushButton("🔍 Ver Transacción")
+        self.btn_back = QPushButton("🔙 Volver al Inicio")
+        self.btn_update = QPushButton("🔄 Actualizar Diarios")  # Nuevo botón
 
         # ✅ Estilos de Botones
         self.btn_add.setStyleSheet("background-color: #009688; color: white; padding: 8px; border-radius: 5px;")
         self.btn_delete.setStyleSheet("background-color: #e74c3c; color: white; padding: 8px; border-radius: 5px;")
         self.btn_export.setStyleSheet("background-color: #f39c12; color: white; padding: 8px; border-radius: 5px;")
-        self.btn_view_transaction.setStyleSheet("background-color: #2980b9; color: white; padding: 8px; border-radius: 5px;")  # Azul para diferenciarlo
+        self.btn_view_transaction.setStyleSheet("background-color: #2980b9; color: white; padding: 8px; border-radius: 5px;")
         self.btn_back.setStyleSheet("background-color: #34495E; color: white; padding: 8px; border-radius: 5px;")
+        self.btn_update.setStyleSheet("background-color: #8e44ad; color: white; padding: 8px; border-radius: 5px;")  # Estilo para el nuevo botón
 
         # ✅ Conexión de los botones
         self.btn_add.clicked.connect(self.agregar_fila)
         self.btn_delete.clicked.connect(self.eliminar_fila)
         self.btn_export.clicked.connect(self.exportar_csv)
-        self.btn_view_transaction.clicked.connect(self.ver_transaccion)  # Conectar el nuevo botón
-        self.btn_back.clicked.connect(self.volver_al_inicio)  # Conectar botón de volver
+        self.btn_view_transaction.clicked.connect(self.ver_transaccion)
+        self.btn_back.clicked.connect(self.volver_al_inicio)
+        self.btn_update.clicked.connect(self.actualizar_diarios)  # Conectar el nuevo botón
 
         # ✅ Diseño de los botones
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.btn_add)
         btn_layout.addWidget(self.btn_delete)
         btn_layout.addWidget(self.btn_export)
-        btn_layout.addWidget(self.btn_view_transaction)  # Agregar botón "Ver Transacción"
-        btn_layout.addWidget(self.btn_back)  # Agrega el botón de volver
+        btn_layout.addWidget(self.btn_view_transaction)
+        btn_layout.addWidget(self.btn_update)  # Agregar el nuevo botón
+        btn_layout.addWidget(self.btn_back)
 
         # ✅ Agregar widgets al layout
         self.page2_layout.addWidget(self.label)
@@ -99,11 +113,14 @@ class Page2(QtWidgets.QWidget):
         self.page2_layout.addLayout(btn_layout)
         self.setLayout(self.page2_layout)
 
+        # Poblar la tabla inicialmente
+        self.actualizar_diarios()
+
     def obtener_diarios(self):
         """Obtiene los datos de la base de datos y los devuelve en formato lista."""
         resultado_json = mostrar_diario()
         resultado = json.loads(resultado_json)
-        return [(diario["glosa"], diario["fecha"]) for diario in resultado]  # Se ajusta a la nueva estructura JSON
+        return [(diario["glosa"], diario["fecha"]) for diario in resultado]
 
     def poblar_tabla(self, datos):
         """Llena la tabla y agrega QDateEdit en la columna Fecha."""
@@ -120,7 +137,11 @@ class Page2(QtWidgets.QWidget):
         """Agrega una nueva fila con un QDateEdit en la columna de fecha."""
         row = self.tableWidget.rowCount()
         self.tableWidget.insertRow(row)
-        self.tableWidget.setItem(row, 0, QTableWidgetItem("Nueva Glosa"))
+        
+        # Usar CustomTableItem para la glosa
+        nuevo_item = CustomTableItem("(Nuevo)")
+        nuevo_item.setFlags(nuevo_item.flags() | QtCore.Qt.ItemIsEditable)
+        self.tableWidget.setItem(row, 0, nuevo_item)
 
         date_widget = QDateEdit()
         date_widget.setCalendarPopup(True)
@@ -180,19 +201,28 @@ class Page2(QtWidgets.QWidget):
             QMessageBox.warning(self, "Error", "El diario seleccionado no es válido.")
             return
 
-        # # Llamar a la función para obtener las transacciones
-        # resultado_json = mostrar_transacciones(glosa)
-        # resultado = json.loads(resultado_json)
-
-        # # Mostrar en un mensaje de alerta (puede mejorarse con un diálogo)
-        # transacciones = "\n".join([f"{t['fecha']} - {t['detalle']} - {t['monto']}" for t in resultado])
-        # QMessageBox.information(self, "Transacciones", f"📄 Transacciones de {glosa}:\n\n{transacciones}")
-
         # Cambiar a la nueva ventana Page4
         self.main_window.stackedWidget.addWidget(Page4(self.main_window, glosa, fecha))
         self.main_window.stackedWidget.setCurrentIndex(self.main_window.stackedWidget.count() - 1)
 
-
     def volver_al_inicio(self):
         """Vuelve a la página principal en el stackedWidget."""
-        self.main_window.stackedWidget.setCurrentIndex(0)  # Cambia a la página principal
+        self.main_window.stackedWidget.setCurrentIndex(0)
+
+    def actualizar_diarios(self):
+        """Actualiza la tabla y registra los nuevos diarios."""
+        # Primero, registrar los nuevos diarios
+        for row in range(self.tableWidget.rowCount()):
+            glosa_item = self.tableWidget.item(row, 0)
+            if glosa_item and glosa_item.text().startswith("(Nuevo)"):
+                fecha = self.tableWidget.cellWidget(row, 1).date().toString("yyyy-MM-dd")
+                glosa = glosa_item.text().replace("(Nuevo)", "").strip()  # Remover el prefijo
+                
+                try:
+                    registrar_diario(fecha, glosa)
+                except Exception as e:
+                    QMessageBox.warning(self, "Error", f"Error al registrar el diario: {str(e)}")
+
+        # Luego, actualizar la tabla con los datos más recientes
+        datos = self.obtener_diarios()
+        self.poblar_tabla(datos)
