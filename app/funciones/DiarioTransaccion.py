@@ -42,6 +42,31 @@ def registrar_diario(fecha, glosa):
         print(f"❌ Error al registrar el asiento: {e}")
         return None
 
+def eliminar_diario(fecha, glosa):
+    """Elimina un asiento en la tabla Diario y todas sus transacciones asociadas."""
+    try:
+        with obtener_conexion() as conn:
+            with conn.cursor() as cursor:
+                # Verificar si existe el diario con la fecha y glosa proporcionadas
+                cursor.execute("SELECT id_diario FROM Diario WHERE fecha = %s AND glosa = %s;", (fecha, glosa))
+                resultado = cursor.fetchone()
+
+                if not resultado:
+                    print(f"⚠️ No se encontró un diario con fecha {fecha} y glosa '{glosa}'.")
+                    return False
+
+                id_diario = resultado[0]
+
+                # Eliminar el diario, lo que también eliminará en cascada las transacciones asociadas
+                cursor.execute("DELETE FROM Diario WHERE id_diario = %s;", (id_diario,))
+
+                conn.commit()
+                print(f"✅ Diario con ID {id_diario} eliminado correctamente.")
+                return True
+    except Exception as e:
+        print(f"❌ Error al eliminar el diario: {e}")
+        return False
+
 def actualizar_diario(fecha, glosa, fechaantigua, glosaantigua):
     """Actualiza un asiento en la tabla Diario y devuelve su ID actualizado."""
     try:
