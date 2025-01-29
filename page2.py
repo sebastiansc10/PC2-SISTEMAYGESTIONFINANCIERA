@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QLineEdit, QMessageBox, QFileDialog, QHeaderView, QTableWidget
 )
 from PyQt5.QtCore import QDate
-from app.funciones.DiarioTransaccion import mostrar_diario, mostrar_transacciones, registrar_diario, actualizar_diario
+from app.funciones.DiarioTransaccion import eliminar_diario, mostrar_diario, registrar_diario, actualizar_diario
 from page4 import Page4
 
 class CustomTableItem(QTableWidgetItem):
@@ -131,11 +131,38 @@ class Page2(QtWidgets.QWidget):
         self.tableWidget.setCellWidget(row, 1, date_widget)
 
     def eliminar_fila(self):
+        """Elimina la fila seleccionada en la tabla y en la base de datos."""
         row = self.tableWidget.currentRow()
-        if row >= 0:
-            self.tableWidget.removeRow(row)
-        else:
+
+        if row < 0:
             QMessageBox.warning(self, "Error", "Seleccione una fila para eliminar.")
+            return
+
+        # Obtener la glosa y la fecha de la fila seleccionada
+        item_glosa = self.tableWidget.item(row, 0)
+        date_widget = self.tableWidget.cellWidget(row, 1)
+
+        if item_glosa is None or date_widget is None:
+            QMessageBox.warning(self, "Error", "No se pudo obtener la información de la fila seleccionada.")
+            return
+
+        glosa = item_glosa.text()
+        fecha = date_widget.date().toString("yyyy-MM-dd")
+
+        # Confirmación antes de eliminar
+        confirmacion = QMessageBox.question(
+            self, "Confirmar eliminación",
+            f"¿Seguro que desea eliminar el diario con fecha {fecha} y glosa '{glosa}'?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
+
+        if confirmacion == QMessageBox.Yes:
+            if eliminar_diario(fecha, glosa):
+                self.tableWidget.removeRow(row)  # Elimina visualmente la fila de la tabla
+                QMessageBox.information(self, "Éxito", "📌 Diario eliminado correctamente.")
+            else:
+                QMessageBox.warning(self, "Error", "No se ha podido eliminar el diario de la base de datos.")
+
 
     def filtrar_tabla(self):
         filtro = self.search_bar.text().lower()
