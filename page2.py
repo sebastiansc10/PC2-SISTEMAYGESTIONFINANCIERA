@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QLineEdit, QMessageBox, QFileDialog, QHeaderView, QTableWidget
 )
 from PyQt5.QtCore import QDate
-from app.funciones.DiarioTransaccion import mostrar_diario
+from app.funciones.DiarioTransaccion import mostrar_diario #, obtener_transacciones  # Agrega obtener_transacciones
 
 class Page2(QtWidgets.QWidget):
     def __init__(self, main_window, parent=None):
@@ -65,25 +65,29 @@ class Page2(QtWidgets.QWidget):
         self.btn_add = QPushButton("➕ Agregar Fila")
         self.btn_delete = QPushButton("🗑️ Eliminar Fila")
         self.btn_export = QPushButton("📤 Exportar CSV")
-        self.btn_back = QPushButton("🔙 Volver al Inicio")  # Nuevo botón para volver
+        self.btn_view_transaction = QPushButton("🔍 Ver Transacción")  # Nuevo botón
+        self.btn_back = QPushButton("🔙 Volver al Inicio")  # Botón de volver
 
         # ✅ Estilos de Botones
         self.btn_add.setStyleSheet("background-color: #009688; color: white; padding: 8px; border-radius: 5px;")
         self.btn_delete.setStyleSheet("background-color: #e74c3c; color: white; padding: 8px; border-radius: 5px;")
         self.btn_export.setStyleSheet("background-color: #f39c12; color: white; padding: 8px; border-radius: 5px;")
+        self.btn_view_transaction.setStyleSheet("background-color: #2980b9; color: white; padding: 8px; border-radius: 5px;")  # Azul para diferenciarlo
         self.btn_back.setStyleSheet("background-color: #34495E; color: white; padding: 8px; border-radius: 5px;")
 
         # ✅ Conexión de los botones
         self.btn_add.clicked.connect(self.agregar_fila)
         self.btn_delete.clicked.connect(self.eliminar_fila)
         self.btn_export.clicked.connect(self.exportar_csv)
-        self.btn_back.clicked.connect(self.volver_al_inicio)  # Conecta botón de volver
+        # self.btn_view_transaction.clicked.connect(self.ver_transaccion)  # Conectar el nuevo botón
+        self.btn_back.clicked.connect(self.volver_al_inicio)  # Conectar botón de volver
 
         # ✅ Diseño de los botones
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.btn_add)
         btn_layout.addWidget(self.btn_delete)
         btn_layout.addWidget(self.btn_export)
+        btn_layout.addWidget(self.btn_view_transaction)  # Agregar botón "Ver Transacción"
         btn_layout.addWidget(self.btn_back)  # Agrega el botón de volver
 
         # ✅ Agregar widgets al layout
@@ -150,6 +154,23 @@ class Page2(QtWidgets.QWidget):
                     fecha = self.tableWidget.cellWidget(row, 1).date().toString("yyyy-MM-dd")
                     file.write(f"{glosa},{fecha}\n")
             QMessageBox.information(self, "Éxito", "El archivo CSV ha sido guardado correctamente.")
+
+    # def ver_transaccion(self):
+    #     """Muestra las transacciones de un diario seleccionado."""
+    #     row = self.tableWidget.currentRow()
+    #     if row < 0:
+    #         QMessageBox.warning(self, "Error", "Seleccione un diario para ver las transacciones.")
+    #         return
+        
+    #     glosa = self.tableWidget.item(row, 0).text()
+
+    #     # Llamar a la función para obtener las transacciones
+    #     resultado_json = obtener_transacciones(glosa)
+    #     resultado = json.loads(resultado_json)
+
+    #     # Mostrar en un mensaje de alerta (puede mejorarse con un diálogo)
+    #     transacciones = "\n".join([f"{t['fecha']} - {t['detalle']} - {t['monto']}" for t in resultado])
+    #     QMessageBox.information(self, "Transacciones", f"📄 Transacciones de {glosa}:\n\n{transacciones}")
 
     def volver_al_inicio(self):
         """Vuelve a la página principal en el stackedWidget."""
