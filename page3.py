@@ -9,8 +9,8 @@ class Page3(QtWidgets.QWidget):
     def setup_ui(self):
         self.page3_layout = QVBoxLayout(self)
 
-        # Título principal
-        self.titulo_principal = QtWidgets.QLabel("Estado de situación financiera")
+        # Título principal (fuera del área de desplazamiento)
+        self.titulo_principal = QtWidgets.QLabel("Registros contables")
         self.titulo_principal.setAlignment(QtCore.Qt.AlignCenter)
         self.titulo_principal.setStyleSheet("""
         font-size: 24px;
@@ -19,7 +19,7 @@ class Page3(QtWidgets.QWidget):
         color: #2C3E50;
     """)
 
-        # Subtítulo con fechas
+        # Subtítulo con fechas (fuera del área de desplazamiento)
         self.subtitulo_fechas = QtWidgets.QLabel()
         self.subtitulo_fechas.setAlignment(QtCore.Qt.AlignCenter)
         self.subtitulo_fechas.setStyleSheet("""
@@ -39,10 +39,34 @@ class Page3(QtWidgets.QWidget):
         content_widget = QtWidgets.QWidget()
         content_layout = QVBoxLayout(content_widget)
 
-        for i in range(30):  # Ejemplo de contenido
-            label = QtWidgets.QLabel(f"Registro contable {i + 1}")
-            label.setStyleSheet("font-size: 16px; padding: 10px;")
-            content_layout.addWidget(label)
+        # Estilos para los títulos dentro del área de desplazamiento
+        titulo_style = """
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        color: #2980B9;
+        """
+
+        # Agregar los nuevos títulos y contenido de ejemplo
+        titulos = [
+            "Diarios y transacciones",
+            "Mayorización",
+            "Balanza de comprobación",
+            "Estado de situación financiera",
+            "Estado de resultados"
+        ]
+
+        for titulo in titulos:
+            label_titulo = QtWidgets.QLabel(titulo)
+            label_titulo.setStyleSheet(titulo_style)
+            content_layout.addWidget(label_titulo)
+
+            # Agregar contenido de ejemplo para cada sección
+            for i in range(5):  # 5 registros de ejemplo por sección
+                label = QtWidgets.QLabel(f"Registro de {titulo.lower()} {i + 1}")
+                label.setStyleSheet("font-size: 16px; padding: 10px;")
+                content_layout.addWidget(label)
 
         self.scroll_area.setWidget(content_widget)
 
