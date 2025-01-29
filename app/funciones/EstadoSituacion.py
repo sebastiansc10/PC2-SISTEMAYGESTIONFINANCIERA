@@ -99,6 +99,26 @@ def calcularbalance(fechainicio, fechafin):
     # Convierte la lista de diccionarios a JSON
     return json.dumps(resultados_dict, indent=4, ensure_ascii=False, default=decimal_default)
 
+def total_debe(fechainicio, fechafin):
+    # Obtener los datos de balance a partir de calcularbalance
+    balance_json = calcularbalance(fechainicio, fechafin)
+    balance_data = json.loads(balance_json)
+
+    # Sumar los valores de 'debe'
+    total_debe = sum(item['debe'] for item in balance_data)
+
+    return total_debe
+
+def total_haber(fechainicio, fechafin):
+    # Obtener los datos de balance a partir de calcularbalance
+    balance_json = calcularbalance(fechainicio, fechafin)
+    balance_data = json.loads(balance_json)
+
+    # Sumar los valores de 'haber'
+    total_haber = sum(item['haber'] for item in balance_data)
+
+    return total_haber
+
 
 def situacion_activocorriente(fechainicio, fechafin):
     with obtener_conexion() as conn:

@@ -1,6 +1,6 @@
 from app.funciones.EstadoSituacion import situacion_activocorriente, situacion_activonocorriente, situacion_pasivo, situacion_patrimonio
 from app.funciones.EstadoSituacion import situacion_totalactivocorriente, situacion_totalactivonocorriente, situacion_totalpasivo, situacion_totalpatrimonio
-from app.funciones.EstadoSituacion import calcularbalance
+from app.funciones.EstadoSituacion import calcularbalance, total_debe, total_haber
 
 import json  # Importamos json para manejar la salida
 
@@ -20,9 +20,15 @@ resultados12_json = situacion_totalactivonocorriente(fechainicio, fechafin)
 resultados13_json = situacion_totalpasivo(fechainicio, fechafin)
 resultados14_json = situacion_totalpatrimonio(fechainicio, fechafin)
 
+total_debe_resultado = total_debe(fechainicio, fechafin)
+total_haber_resultado = total_haber(fechainicio, fechafin)
+
 # Imprimir el JSON formateado (opcional)
 print("Balance de comprobación:")
 print(resultados0_json)
+print("--------------------------------")
+print(f"Total 'Debe' desde: {total_debe_resultado}")
+print(f"Total 'Haber' desde: {total_haber_resultado}")
 print("--------------------------------")
 print("Resultados en formato JSON de los activos corrientes:")
 print(resultados1_json)

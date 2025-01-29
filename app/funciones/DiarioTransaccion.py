@@ -12,6 +12,32 @@ def mostrar_diario():
             resultado = {cuenta[0].strftime('%Y-%m-%d'): cuenta[1] for cuenta in cuentas}
             return json.dumps(resultado)  # Convierte el diccionario a JSON
 
+def mostrar_transacciones_diario(id_diario):
+    """Devuelve un JSON con las transacciones de un diario específico."""
+    try:
+        with obtener_conexion() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT t.ID_Cuenta, c.Nombre_Cuenta, t.DH, t.Cantidad
+                    FROM Transaccion t
+                    JOIN Cuenta c ON t.ID_Cuenta = c.ID_Cuenta
+                    WHERE t.ID_Diario = %s
+                    ORDER BY t.ID_Transaccion ASC;
+                """, (id_diario,))
+                
+                transacciones = cursor.fetchall()
+
+                # Convertir los resultados en una lista de diccionarios
+                resultado = [
+                    {"id_cuenta": t[0], "nombre_cuenta": t[1], "DH": t[2], "cantidad": float(t[3])}
+                    for t in transacciones
+                ]
+
+                return json.dumps(resultado, indent=4)  # Convertir la lista a JSON con formato legible
+    except Exception as e:
+        print(f"❌ Error al obtener las transacciones: {e}")
+        return json.dumps({"error": str(e)})
+    
 
 def registrar_diario(fecha, glosa):
     """Registra un nuevo asiento en la tabla Diario y devuelve su ID."""
