@@ -5,7 +5,7 @@ def registrar_diario(fecha, glosa):
     with obtener_conexion() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
-                I   NSERT INTO Diario (Fecha, Glosa)
+                INSERT INTO Diario (Fecha, Glosa)
                 VALUES (%s, %s)
                 RETURNING ID_Diario
             """, (fecha, glosa))
