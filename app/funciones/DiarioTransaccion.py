@@ -14,16 +14,22 @@ def mostrar_diario():
 
 def registrar_diario(fecha, glosa):
     """Registra un nuevo asiento en la tabla Diario y devuelve su ID."""
-    with obtener_conexion() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO Diario (Fecha, Glosa)
-                VALUES (%s, %s)
-                RETURNING ID_Diario
-            """, (fecha, glosa))
-            id_diario = cursor.fetchone()[0]
-            conn.commit()
-            return id_diario
+    try:
+        with obtener_conexion() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO Diario (Fecha, Glosa)
+                    VALUES (%s, %s)
+                    RETURNING ID_Diario;
+                """, (fecha, glosa))
+                id_diario = cursor.fetchone()[0]
+                conn.commit()
+                print(f"✅ Asiento registrado con ID {id_diario}")
+                return id_diario
+    except Exception as e:
+        print(f"❌ Error al registrar el asiento: {e}")
+        return None
+
 
 def obtener_cuentas():
     """Devuelve un diccionario con las cuentas disponibles en la tabla Cuenta."""
