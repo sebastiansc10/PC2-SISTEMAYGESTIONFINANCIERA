@@ -1,14 +1,14 @@
 import json
-from app.funciones.EstadoSituacion import calcularbalance  # Importamos la función que obtiene los datos
+from app.funciones.EstadoSituacion import calcularbalance
 
-# Definimos la clasificación de cuentas por id_elemento
+# 🔹 Definimos las cuentas específicas según ID_Cuenta en la base de datos
 CATEGORIAS_CUENTAS = {
-    "ventas": [7],  # Ingresos
-    "costo_ventas": [6],  # Costos de venta
-    "gastos_operativos": [6],  # Gastos operativos específicos
-    "otros_ingresos": [7],  # Otros ingresos no operativos
-    "perdidas": [6],  # Pérdidas extraordinarias
-    "impuesto_renta": [8]  # Impuestos
+    "ventas": [70],  # Ingresos por ventas
+    "costo_ventas": [69],  # Costos de ventas
+    "gastos_operativos": [62, 63, 68],  # Gastos operativos específicos
+    "otros_ingresos": [75],  # Otros ingresos no operativos
+    "perdidas": [66],  # Pérdidas extraordinarias
+    "impuesto_renta": [88]  # Impuestos a la renta
 }
 
 def calcular_estado_resultados(fechainicio, fechafin):
@@ -16,13 +16,21 @@ def calcular_estado_resultados(fechainicio, fechafin):
     Obtiene el Balance de Comprobación desde `calcularbalance` y genera el Estado de Resultados.
     """
 
-    # Obtener datos del balance de comprobación como JSON
+    # 🔹 Obtener datos del balance de comprobación como JSON
     balance_json = calcularbalance(fechainicio, fechafin)
 
-    # Convertir JSON a lista de diccionarios
+    # 🔹 Verificar qué devuelve calcularbalance()
+    print("📌 JSON devuelto por calcularbalance:\n", balance_json)  # <<<< Agregado para depuración
+
+    # 🔹 Convertir JSON a lista de diccionarios
     balance = json.loads(balance_json)
 
-    # Función para obtener valores dinámicamente por categoría
+    # 🔹 Si el balance está vacío, detener la ejecución
+    if not balance:
+        print("⚠️ ERROR: No se encontraron datos en el balance de comprobación.")
+        return json.dumps({"error": "No hay datos en el balance"}, indent=4)
+
+    # 🔹 Función para obtener totales de cuentas específicas
     def obtener_total_por_cuentas(lista_cuentas, tipo):
         """
         Obtiene el total de Debe o Haber según una lista de cuentas específicas.
@@ -32,7 +40,7 @@ def calcular_estado_resultados(fechainicio, fechafin):
         """
         return sum(item.get(tipo.lower(), 0) for item in balance if item["id_cuenta"] in lista_cuentas)
 
-    # Función para obtener gastos operativos desglosados automáticamente
+    # 🔹 Obtener desglose de gastos operativos
     def obtener_gastos_operativos():
         """
         Obtiene un desglose automático de los gastos operativos sin incluir costos de venta ni pérdidas.
@@ -50,24 +58,24 @@ def calcular_estado_resultados(fechainicio, fechafin):
 
         return {"detalle": gastos, "total_gastos_operativos": total_gastos}
 
-    # Obtener valores corregidos desde el Balance de Comprobación
-    ventas = obtener_total_por_cuentas([70], "Haber")  # Solo cuenta de ventas
-    costo_ventas = obtener_total_por_cuentas([69], "Debe")  # Solo costo de venta
-    otros_ingresos = obtener_total_por_cuentas([75], "Haber")  # Solo otros ingresos
-    perdidas = obtener_total_por_cuentas([66], "Debe")  # Solo pérdidas
-    impuesto_renta = obtener_total_por_cuentas([88], "Debe")  # Solo impuesto a la renta
+    # 🔹 Obtener valores corregidos desde el Balance de Comprobación
+    ventas = obtener_total_por_cuentas(CATEGORIAS_CUENTAS["ventas"], "Haber")
+    costo_ventas = obtener_total_por_cuentas(CATEGORIAS_CUENTAS["costo_ventas"], "Debe")
+    otros_ingresos = obtener_total_por_cuentas(CATEGORIAS_CUENTAS["otros_ingresos"], "Haber")
+    perdidas = obtener_total_por_cuentas(CATEGORIAS_CUENTAS["perdidas"], "Debe")
+    impuesto_renta = obtener_total_por_cuentas(CATEGORIAS_CUENTAS["impuesto_renta"], "Debe")
 
-    # Obtener desglose de gastos operativos
+    # 🔹 Obtener desglose de gastos operativos
     gastos_operativos = obtener_gastos_operativos()
     total_gastos_operativos = gastos_operativos["total_gastos_operativos"]
 
-    # Cálculos del Estado de Resultados
+    # 🔹 Cálculos del Estado de Resultados
     utilidad_bruta = ventas - costo_ventas
     utilidad_operativa = utilidad_bruta - total_gastos_operativos
     utilidad_antes_impuestos = utilidad_operativa + otros_ingresos - perdidas
     utilidad_neta = utilidad_antes_impuestos - impuesto_renta
 
-    # Construcción del JSON de salida
+    # 🔹 Construcción del JSON de salida
     resultado = {
         "ventas": ventas,
         "costo_ventas": costo_ventas,
