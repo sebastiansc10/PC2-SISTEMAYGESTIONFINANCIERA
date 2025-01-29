@@ -243,4 +243,3 @@ class Page2(QtWidgets.QWidget):
     def volver_al_inicio(self):
         if self.main_window:
             self.main_window.stackedWidget.setCurrentIndex(0)
-
