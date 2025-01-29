@@ -16,6 +16,7 @@ from app.funciones.Mayorizar_BalanceComprobación import mayorizartransacciones
 class Page3(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent_window = parent  # Guardamos la referencia al Ui_MainWindow
         self.diario_tables = []  # To store references to diario tables
         self.mayorizacion_tables = []  # To store references to mayorizacion tables
         self.setup_ui()
@@ -182,6 +183,22 @@ class Page3(QtWidgets.QWidget):
         self.page3_layout.addWidget(self.titulo_principal)
         self.page3_layout.addWidget(self.subtitulo_fechas)
         self.page3_layout.addWidget(self.scroll_area)
+
+        # Botón para volver al inicio
+        self.boton_volver_inicio = QPushButton("🔙 Volver al Inicio")
+        self.boton_volver_inicio.setStyleSheet("""
+            background-color: #3498db;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        """)
+        self.boton_volver_inicio.clicked.connect(self.volver_al_inicio)
+        
+        # Agregar el botón al layout de la página
+        self.page3_layout.addWidget(self.boton_volver_inicio)
+
         self.setLayout(self.page3_layout)
 
     def crear_tabla(self):
@@ -791,5 +808,7 @@ class Page3(QtWidgets.QWidget):
         
         event.accept()
 
-    # [Rest of the existing methods remain the same]
-
+    def volver_al_inicio(self):
+        """Regresa a la página principal."""
+        if self.parent_window:
+            self.parent_window.stackedWidget.setCurrentIndex(0)

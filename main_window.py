@@ -33,7 +33,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         # Inicializar páginas
         self.page1 = Page1()
         self.page2 = Page2(self)
-        self.page3 = Page3()
+        self.page3 = Page3(self)
 
         # Agregar páginas al stacked widget
         self.stackedWidget.addWidget(self.page1)
