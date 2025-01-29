@@ -5,7 +5,7 @@ import json
 # Agregar la ruta del proyecto al PYTHONPATH para acceder a `Mayorizar_BalanceComprobación.py`
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from app.funciones.Mayorizar_BalanceComprobación import mayorizar, formatear_mayor
+from app.funciones.Mayorizar_BalanceComprobación import mayorizar, formatear_mayor, mayorizartransacciones
 
 def main():
     """
@@ -21,10 +21,10 @@ def main():
             return
 
         # Llamar a la función mayorizar
-        mayor = mayorizar(fecha_inicio, fecha_fin)
-
+        mayor = mayorizartransacciones(fecha_inicio, fecha_fin)
+        resultado_json=mayor
         # Formatear los resultados a JSON
-        resultado_json = formatear_mayor(mayor)
+        #resultado_json = formatear_mayor(mayor)
 
         # Mostrar el JSON resultante
         if resultado_json:

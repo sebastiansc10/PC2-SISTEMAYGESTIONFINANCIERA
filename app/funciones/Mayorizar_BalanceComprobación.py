@@ -67,3 +67,58 @@ def formatear_mayor(mayor):
     except Exception as e:
         print(f"❌ Error al formatear los datos: {e}")
         return None
+
+
+import json
+from datetime import datetime
+
+import json
+from datetime import datetime
+from decimal import Decimal
+
+def mayorizartransacciones(fecha_inicio, fecha_fin):
+    """
+    Obtiene los movimientos contables agrupados por cuenta y fecha y los devuelve en formato JSON.
+    :param fecha_inicio: Fecha inicial del rango (YYYY-MM-DD).
+    :param fecha_fin: Fecha final del rango (YYYY-MM-DD).
+    :return: JSON con los resultados del mayor.
+    """
+    try:
+        with obtener_conexion() as conn:
+            with conn.cursor() as cursor:
+                # Consulta SQL corregida
+                cursor.execute(
+                    """
+                    SELECT 
+                        c.id_cuenta,
+                        c.nombre_cuenta,
+                        d.fecha,
+                        t.dh,
+                        t.cantidad 
+                    FROM transaccion t
+                    INNER JOIN cuenta c ON t.id_cuenta = c.id_cuenta
+                    INNER JOIN diario d ON t.id_diario = d.id_diario
+                    WHERE d.fecha BETWEEN %s AND %s
+                    ORDER BY c.id_cuenta, d.fecha;
+                    """,
+                    (fecha_inicio, fecha_fin)
+                )
+
+                resultados = cursor.fetchall()
+
+                # Procesar resultados a JSON
+                mayor = [
+                    {
+                        "id_cuenta": resultado[0],
+                        "nombre_cuenta": resultado[1],
+                        "fecha": resultado[2].strftime("%Y-%m-%d"),  # Convertir fecha a string
+                        "dh": resultado[3],
+                        "cantidad": float(resultado[4]) if isinstance(resultado[4], Decimal) else resultado[4]
+                    }
+                    for resultado in resultados
+                ]
+
+                return json.dumps(mayor, ensure_ascii=False, indent=4)  # Convertir a JSON con formato legible
+    except Exception as e:
+        error_msg = {"error": str(e)}
+        return json.dumps(error_msg, ensure_ascii=False, indent=4)
