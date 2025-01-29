@@ -176,20 +176,21 @@ class Page3(QtWidgets.QWidget):
         resultados_data = json.loads(resultados_json)
 
         # Preparar los datos para la tabla
-        datos_tabla = []
-        datos_tabla.append(("Ventas", resultados_data["ventas"]))
-        datos_tabla.append(("Costo de ventas", resultados_data["costo_ventas"]))
-        datos_tabla.append(("Utilidad bruta", resultados_data["utilidad_bruta"]))
-        datos_tabla.append(("Gastos operativos", ""))
-        for gasto, valor in resultados_data["gastos_operativos"]["detalle"].items():
-            datos_tabla.append((f"  {gasto}", valor))
-        datos_tabla.append(("Total gastos operativos", resultados_data["gastos_operativos"]["total_gastos_operativos"]))
-        datos_tabla.append(("Utilidad operativa", resultados_data["utilidad_operativa"]))
-        datos_tabla.append(("Otros ingresos", resultados_data["otros_ingresos"]))
-        datos_tabla.append(("Pérdidas", resultados_data["perdidas"]))
-        datos_tabla.append(("Utilidad antes de impuestos", resultados_data["utilidad_antes_impuestos"]))
-        datos_tabla.append(("Impuesto a la renta", resultados_data["impuesto_renta"]))
-        datos_tabla.append(("Utilidad neta", resultados_data["utilidad_neta"]))
+        datos_tabla = [
+            ("Ventas", resultados_data["ventas"]),
+            ("Costo de ventas", resultados_data["costo_ventas"]),
+            ("Utilidad bruta", resultados_data["utilidad_bruta"]),
+            ("Gastos de personal", resultados_data["Gastos de personal"]),
+            ("Gastos de servicios", resultados_data["Gastos de servicios"]),
+            ("Devaluación", resultados_data["Devaluación"]),
+            ("Total gastos operativos", resultados_data["gastos_operativos"]),
+            ("Utilidad operativa", resultados_data["utilidad_operativa"]),
+            ("Otros ingresos", resultados_data["otros_ingresos"]),
+            ("Pérdidas", resultados_data["perdidas"]),
+            ("Utilidad antes de impuestos", resultados_data["utilidad_antes_impuestos"]),
+            ("Impuesto a la renta", resultados_data["impuesto_renta"]),
+            ("Utilidad neta", resultados_data["utilidad_neta"])
+        ]
 
         # Filtrar filas en blanco
         datos_tabla = [fila for fila in datos_tabla if fila[1] != "" and fila[1] != 0]
@@ -202,9 +203,10 @@ class Page3(QtWidgets.QWidget):
             self.agregar_fila_resultados(row, nombre, valor)
 
         # Colorear filas específicas
-        self.colorear_fila("Utilidad bruta", QColor(255, 255, 200))
-        self.colorear_fila("Utilidad operativa", QColor(255, 255, 200))
+        self.colorear_fila("Utilidad bruta", QColor(133, 238, 35))
+        self.colorear_fila("Utilidad operativa", QColor(133, 238, 35))
         self.colorear_fila("Utilidad antes de impuestos", QColor(255, 200, 100))
+        self.colorear_fila("Total gastos operativos", QColor(234, 85, 20))
 
         # Ajustar el tamaño de las filas y columnas
         self.tabla_resultados.resizeColumnsToContents()
