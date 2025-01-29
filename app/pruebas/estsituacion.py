@@ -26,10 +26,11 @@ total_haber_resultado = total_haber(fechainicio, fechafin)
 totaldiario = diariotransaccion(fechainicio, fechafin)
 
 # Imprimir el JSON formateado (opcional)
-"""
+
 print("Diario y transacción:")
 print(totaldiario)
 print("--------------------------------")
+"""
 print("Balance de comprobación:")
 print(resultados0_json)
 print("--------------------------------")
@@ -46,12 +47,10 @@ print(resultados2_json)
 print("Total:")
 print(resultados12_json)
 print("--------------------------------")
-"""
 print("Resultados en formato JSON de los pasivos:")
 print(resultados3_json)
 print("Total:")
 print(resultados13_json)
-"""
 print("--------------------------------")
 print("Resultados en formato JSON del patrimonio:")
 print(resultados4_json)

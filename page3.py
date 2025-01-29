@@ -10,10 +10,12 @@ from app.funciones.EstadoSituacion import (
     situacion_patrimonio
 )
 from app.funciones.EstadoResultados import calcular_estado_resultados, utilidadantes
+from app.funciones.DiarioTransaccion import diariotransaccion  # Add this import
 
 class Page3(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.diario_tables = []  # To store references to diario tables
         self.setup_ui()
 
     def setup_ui(self):
@@ -72,7 +74,13 @@ class Page3(QtWidgets.QWidget):
             label_titulo.setStyleSheet(titulo_style)
             content_layout.addWidget(label_titulo)
 
-            if titulo == "Balanza de comprobación":
+            if titulo == "Diarios y transacciones":
+                # Create a container widget for diario tables
+                self.diario_container = QtWidgets.QWidget()
+                self.diario_layout = QVBoxLayout(self.diario_container)
+                self.diario_layout.setSpacing(20)  # Add spacing between tables
+                content_layout.addWidget(self.diario_container)
+            elif titulo == "Balanza de comprobación":
                 # Crear la tabla de balance de comprobación
                 self.tabla_balance = QTableWidget()
                 self.tabla_balance.setColumnCount(4)
@@ -195,6 +203,7 @@ class Page3(QtWidgets.QWidget):
         self.actualizar_tabla_pasivos(fecha_inicio, fecha_fin)
         self.actualizar_tabla_patrimonio(fecha_inicio, fecha_fin)
         self.actualizar_tabla_resumen(fecha_inicio, fecha_fin)
+        self.actualizar_diarios(fecha_inicio, fecha_fin)
 
     def actualizar_tabla_balance(self, fecha_inicio, fecha_fin):
         # Aquí llamamos a la función calcularbalance
@@ -553,4 +562,109 @@ class Page3(QtWidgets.QWidget):
         # Calculate and set the total height of the table
         total_height = self.tabla_resumen.horizontalHeader().height() + self.tabla_resumen.rowHeight(0)
         self.tabla_resumen.setFixedHeight(total_height)
+
+    def crear_tabla_diario(self):
+        """Create a new table for diario entries"""
+        tabla = QTableWidget()
+        tabla.setColumnCount(4)
+        tabla.setHorizontalHeaderLabels([
+            "Código de cuenta",
+            "Nombre de cuenta",
+            "Debe",
+            "Haber"
+        ])
+        tabla.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        tabla.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #d0d0d0;
+                border-radius: 4px;
+            }
+            QHeaderView::section {
+                background-color: #f0f0f0;
+                padding: 4px;
+                border: 1px solid #d0d0d0;
+                font-weight: bold;
+            }
+        """)
+        tabla.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        return tabla
+
+    def actualizar_diarios(self, fecha_inicio, fecha_fin):
+        """Update the diario tables with new data"""
+        # Clear existing tables
+        for tabla in self.diario_tables:
+            self.diario_layout.removeWidget(tabla)
+            tabla.deleteLater()
+        self.diario_tables.clear()
+
+        # Get new data
+        diarios_json = diariotransaccion(fecha_inicio, fecha_fin)
+        diarios_data = json.loads(diarios_json)
+
+        # Create tables for each diario entry
+        for diario in diarios_data:
+            # Create date header
+            fecha_label = QtWidgets.QLabel(diario['fecha'])
+            fecha_label.setStyleSheet("""
+                font-weight: bold;
+                font-size: 14px;
+                padding: 5px;
+            """)
+            self.diario_layout.addWidget(fecha_label)
+
+            # Create table
+            tabla = self.crear_tabla_diario()
+            tabla.setRowCount(len(diario['transacciones']))
+
+            # Fill table with transactions
+            for row, trans in enumerate(diario['transacciones']):
+                tabla.setItem(row, 0, QTableWidgetItem(str(trans['id_cuenta'])))
+                tabla.setItem(row, 1, QTableWidgetItem(trans['nombre_cuenta']))
+                
+                # Set Debe/Haber values
+                if trans['dh'] == 'Debe':
+                    tabla.setItem(row, 2, QTableWidgetItem(f"{trans['cantidad']:.2f}"))
+                    tabla.setItem(row, 3, QTableWidgetItem("0.00"))
+                else:
+                    tabla.setItem(row, 2, QTableWidgetItem("0.00"))
+                    tabla.setItem(row, 3, QTableWidgetItem(f"{trans['cantidad']:.2f}"))
+
+            # Adjust table height
+            tabla.resizeRowsToContents()
+            total_height = tabla.horizontalHeader().height()
+            for i in range(tabla.rowCount()):
+                total_height += tabla.rowHeight(i)
+            tabla.setFixedHeight(total_height)
+            tabla.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+            # Add table to layout
+            self.diario_layout.addWidget(tabla)
+
+            # Create glosa label
+            glosa_label = QtWidgets.QLabel(f"Glosa: {diario['glosa']}")
+            glosa_label.setStyleSheet("""
+                font-style: italic;
+                padding: 5px;
+                color: #666;
+            """)
+            self.diario_layout.addWidget(glosa_label)
+
+            # Add a small vertical spacing between entries
+            self.diario_layout.addSpacing(10)
+
+            # Store reference to table
+            self.diario_tables.append(tabla)
+
+
+    # [Rest of the existing methods remain thediario_tables.append(tabla)
+
+
+    # [Rest of the existing methods remain the same]
+
+    def closeEvent(self, event):
+        for tabla in self.diario_tables:
+            self.diario_layout.removeWidget(tabla)
+            tabla.deleteLater()
+        self.diario_tables.clear()
+        event.accept()
 
