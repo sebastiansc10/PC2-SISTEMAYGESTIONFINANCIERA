@@ -5,7 +5,8 @@ from PyQt5.QtWidgets import (
     QLineEdit, QMessageBox, QFileDialog, QHeaderView, QTableWidget
 )
 from PyQt5.QtCore import QDate
-from app.funciones.DiarioTransaccion import mostrar_diario #, obtener_transacciones  # Agrega obtener_transacciones
+from app.funciones.DiarioTransaccion import mostrar_diario,mostrar_transacciones
+from page4 import Page4
 
 class Page2(QtWidgets.QWidget):
     def __init__(self, main_window, parent=None):
@@ -79,7 +80,7 @@ class Page2(QtWidgets.QWidget):
         self.btn_add.clicked.connect(self.agregar_fila)
         self.btn_delete.clicked.connect(self.eliminar_fila)
         self.btn_export.clicked.connect(self.exportar_csv)
-        # self.btn_view_transaction.clicked.connect(self.ver_transaccion)  # Conectar el nuevo botón
+        self.btn_view_transaction.clicked.connect(self.ver_transaccion)  # Conectar el nuevo botón
         self.btn_back.clicked.connect(self.volver_al_inicio)  # Conectar botón de volver
 
         # ✅ Diseño de los botones
@@ -154,23 +155,42 @@ class Page2(QtWidgets.QWidget):
                     fecha = self.tableWidget.cellWidget(row, 1).date().toString("yyyy-MM-dd")
                     file.write(f"{glosa},{fecha}\n")
             QMessageBox.information(self, "Éxito", "El archivo CSV ha sido guardado correctamente.")
+ 
+    def actualizar_estado_boton(self):
+        """Habilita o deshabilita el botón dependiendo de si hay un diario seleccionado."""
+        if self.tableWidget.currentRow() >= 0:
+            self.btn_view_transaction.setEnabled(True)
+        else:
+            self.btn_view_transaction.setEnabled(False)
 
-    # def ver_transaccion(self):
-    #     """Muestra las transacciones de un diario seleccionado."""
-    #     row = self.tableWidget.currentRow()
-    #     if row < 0:
-    #         QMessageBox.warning(self, "Error", "Seleccione un diario para ver las transacciones.")
-    #         return
+    def ver_transaccion(self):
+        """Muestra las transacciones de un diario seleccionado."""
+        diarios_disponibles = self.obtener_diarios()
+
+        row = self.tableWidget.currentRow()
+        if row < 0:
+            QMessageBox.warning(self, "Error", "Seleccione un diario para ver las transacciones.")
+            return
         
-    #     glosa = self.tableWidget.item(row, 0).text()
+        glosa = self.tableWidget.item(row, 0).text()
+        fecha = self.tableWidget.cellWidget(row, 1).date().toString("yyyy-MM-dd")
 
-    #     # Llamar a la función para obtener las transacciones
-    #     resultado_json = obtener_transacciones(glosa)
-    #     resultado = json.loads(resultado_json)
+        if (glosa, fecha) not in diarios_disponibles:
+            QMessageBox.warning(self, "Error", "El diario seleccionado no es válido.")
+            return
 
-    #     # Mostrar en un mensaje de alerta (puede mejorarse con un diálogo)
-    #     transacciones = "\n".join([f"{t['fecha']} - {t['detalle']} - {t['monto']}" for t in resultado])
-    #     QMessageBox.information(self, "Transacciones", f"📄 Transacciones de {glosa}:\n\n{transacciones}")
+        # # Llamar a la función para obtener las transacciones
+        # resultado_json = mostrar_transacciones(glosa)
+        # resultado = json.loads(resultado_json)
+
+        # # Mostrar en un mensaje de alerta (puede mejorarse con un diálogo)
+        # transacciones = "\n".join([f"{t['fecha']} - {t['detalle']} - {t['monto']}" for t in resultado])
+        # QMessageBox.information(self, "Transacciones", f"📄 Transacciones de {glosa}:\n\n{transacciones}")
+
+        # Cambiar a la nueva ventana Page4
+        self.main_window.stackedWidget.addWidget(Page4(self.main_window, glosa, fecha))
+        self.main_window.stackedWidget.setCurrentIndex(self.main_window.stackedWidget.count() - 1)
+
 
     def volver_al_inicio(self):
         """Vuelve a la página principal en el stackedWidget."""
