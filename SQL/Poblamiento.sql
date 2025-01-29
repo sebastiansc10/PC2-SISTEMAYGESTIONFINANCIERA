@@ -92,23 +92,51 @@ INSERT INTO Cuenta (ID_Cuenta, Nombre_Cuenta, ID_Elemento) VALUES
 
 
 
+insert into diario (fecha, glosa) values
+('01/04/2009', 'Aporte de capital en efectivo'),
+('02/04/2009', 'Compra de mercadería al contado'),
+('02/04/2009', 'Compra de muebles de oficina'),
+('15/05/2009', 'Venta al contado y al crédito'),
+('30/05/2009', 'Devolución al proveedor'),
+('31/05/2009', 'Cobro de factura antes de vencimiento con descuento'),
+('30/06/2009', 'Donación en mercadería'),
+('15/07/2009', 'Compra al crédito al proveedor'),
+('31/07/2009', 'Venta al contado'),
+('05/09/2009', 'Pérdida de mercadería por siniestro'),
+('30/09/2009', 'Gasto de personal pendiente de pago'),
+('30/09/2009', 'Gastos de personal pendiente de pago'),
+('30/09/2009', 'Registro del costo de la venta que sale de inventario'),
+('30/09/2009', 'Gasto por uso del mueble en 6 meses');
 
-
-insert into diario (Fecha, glosa) values
-('2025/01/27', 'Datos de prueba');
-
-
--- Insertar transacciones para el 27 de enero de 2025
-INSERT INTO Transaccion (Cantidad, DH, ID_Diario, ID_Cuenta) VALUES
-(100.00, 'Debe', 1, 10),  -- 100.00 en 'Debe' para la cuenta 10 (Efectivo y equivalentes de efectivo)
-(100.00, 'Haber', 1, 50), -- 100.00 en 'Haber' para la cuenta 50 (Capital)
-
-(200.00, 'Debe', 1, 11),  -- 200.00 en 'Debe' para la cuenta 11 (Inversiones financieras)
-(200.00, 'Haber', 1, 30), -- 200.00 en 'Haber' para la cuenta 30 (Inversiones mobiliarias)
-
-(150.00, 'Debe', 1, 20),  -- 150.00 en 'Debe' para la cuenta 20 (Mercaderías)
-(150.00, 'Haber', 1, 40), -- 150.00 en 'Haber' para la cuenta 40 (Tributos por pagar)
-
-(50.00, 'Debe', 1, 60),   -- 50.00 en 'Debe' para la cuenta 60 (Compras)
-(50.00, 'Haber', 1, 70);  -- 50.00 en 'Haber' para la cuenta 70 (Ventas)
-
+insert into transaccion (Cantidad, DH, ID_Diario, ID_Cuenta) values
+(10000, 'Debe', 1, 10),
+(10000, 'Haber', 1, 50),
+(4000, 'Debe', 2, 20),
+(4000, 'Haber', 2, 10),
+(3000, 'Debe', 3, 33),
+(3000, 'Haber', 3, 10),
+(6000, 'Haber', 4, 70),
+(3000, 'Debe', 4, 10),
+(3000, 'Debe', 4, 12),
+(500, 'Haber', 5, 20),
+(500, 'Debe', 5, 10),
+(300, 'Debe', 6, 70),
+(2700, 'Debe', 6, 10),
+(3000, 'Haber', 6, 12),
+(1000, 'Haber', 7, 75),
+(1000, 'Debe', 7, 20),
+(2000, 'Debe', 8, 20),
+(2000, 'Haber', 8, 42),
+(3000, 'Haber', 9, 70),
+(3000, 'Debe', 9, 10),
+(600, 'Haber', 10, 20),
+(600, 'Debe', 10, 66),
+(1200, 'Haber', 11, 41),
+(1200, 'Debe', 11, 62),
+(1300, 'Haber', 12, 10),
+(800, 'Debe', 12, 63),
+(500, 'Debe', 12, 63),
+(3400, 'Debe', 13, 69),
+(3400, 'Haber', 13, 20),
+(135, 'Haber', 14, 39),
+(135, 'Debe', 14, 68);

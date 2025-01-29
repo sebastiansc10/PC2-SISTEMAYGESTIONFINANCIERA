@@ -5,8 +5,8 @@ from app.funciones.EstadoSituacion import calcularbalance
 import json  # Importamos json para manejar la salida
 
 
-fechainicio = '2025-01-01'
-fechafin = '2025-01-27'
+fechainicio = '2009-04-01'
+fechafin = '2009-09-30'
 
 # Obtener resultados en formato JSON
 resultados0_json = calcularbalance(fechainicio, fechafin)

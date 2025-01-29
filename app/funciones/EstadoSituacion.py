@@ -146,7 +146,7 @@ def situacion_activonocorriente(fechainicio, fechafin):
             cursor.execute(
                 """
                 select c.id_cuenta , c.nombre_cuenta,
-                -1 * SUM(CASE 
+                SUM(CASE 
                             WHEN t.DH = 'Debe' THEN t.Cantidad  -- Especificamos que `DH` y `Cantidad` provienen de `Transaccion`
                             WHEN t.DH = 'Haber' THEN -t.Cantidad
                             ELSE 0 
