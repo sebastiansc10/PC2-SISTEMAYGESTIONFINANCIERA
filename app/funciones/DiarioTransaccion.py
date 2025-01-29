@@ -1,4 +1,16 @@
 from app.db_connection import obtener_conexion
+import json
+
+def mostrar_diario():
+    """Devuelve un JSON con las cuentas disponibles en la tabla Diario."""
+    with obtener_conexion() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT fecha, glosa FROM diario d ORDER BY fecha ASC;")
+            cuentas = cursor.fetchall()
+            # Convertir las fechas a cadenas de texto
+            resultado = {cuenta[0].strftime('%Y-%m-%d'): cuenta[1] for cuenta in cuentas}
+            return json.dumps(resultado)  # Convierte el diccionario a JSON
+
 
 def registrar_diario(fecha, glosa):
     """Registra un nuevo asiento en la tabla Diario y devuelve su ID."""
