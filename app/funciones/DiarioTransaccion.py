@@ -1,3 +1,4 @@
+import decimal
 from app.db_connection import obtener_conexion
 import json
 
@@ -85,4 +86,44 @@ def registrar_asiento_completo():
         if continuar != 's':
             break
 
-        
+def decimal_default(obj):
+    """Convierte objetos Decimal a float para JSON."""
+    if isinstance(obj, decimal.Decimal):
+        return float(obj)
+    raise TypeError
+
+def mostrar_transacciones(glosa, fecha):
+    """
+    Devuelve un JSON con las transacciones de un diario específico.
+    :param glosa: Glosa del diario.
+    :param fecha: Fecha del diario (YYYY-MM-DD).
+    :return: JSON con las transacciones del diario.
+    """
+    with obtener_conexion() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT 
+                    t.cantidad, 
+                    t.dh, 
+                    c.nombre_cuenta 
+                FROM transaccion t
+                INNER JOIN cuenta c ON t.id_cuenta = c.id_cuenta
+                WHERE t.id_diario = (SELECT d.id_diario FROM diario d WHERE d.glosa = %s AND d.fecha = %s)
+                ORDER BY t.dh DESC, t.cantidad DESC;
+                """, 
+                (glosa, fecha)
+            )
+            transacciones = cursor.fetchall()
+
+            # Formatear los resultados en un diccionario
+            resultado = [
+                {
+                    "cantidad": float(transaccion[0]),  # Convertir Decimal a float
+                    "tipo": transaccion[1],  # 'Debe' o 'Haber'
+                    "cuenta": transaccion[2]  # Nombre de la cuenta
+                }
+                for transaccion in transacciones
+            ]
+            
+            return json.dumps(resultado, indent=4, ensure_ascii=False, default=decimal_default)  # Convierte a JSON
