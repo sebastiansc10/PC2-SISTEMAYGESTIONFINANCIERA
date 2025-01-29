@@ -47,6 +47,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.fechainicio = None
         self.fechafin = None
 
+        # Maximiza la ventana al iniciar
+        self.showMaximized()
+        
     #def setup_main_page(self):
     #    #This function is no longer needed.
     #    pass
