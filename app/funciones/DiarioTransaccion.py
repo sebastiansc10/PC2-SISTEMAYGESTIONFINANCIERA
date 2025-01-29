@@ -169,7 +169,8 @@ def mostrar_transacciones(glosa, fecha):
                 SELECT 
                     t.cantidad, 
                     t.dh, 
-                    c.nombre_cuenta 
+                    c.nombre_cuenta,
+                    c.id_cuenta 
                 FROM transaccion t
                 INNER JOIN cuenta c ON t.id_cuenta = c.id_cuenta
                 WHERE t.id_diario = (SELECT d.id_diario FROM diario d WHERE d.glosa = %s AND d.fecha = %s)
@@ -184,7 +185,8 @@ def mostrar_transacciones(glosa, fecha):
                 {
                     "cantidad": float(transaccion[0]),  # Convertir Decimal a float
                     "tipo": transaccion[1],  # 'Debe' o 'Haber'
-                    "cuenta": transaccion[2]  # Nombre de la cuenta
+                    "cuenta": transaccion[2],  # Nombre de la cuenta
+                    "id_cuenta": transaccion[3]
                 }
                 for transaccion in transacciones
             ]
@@ -286,3 +288,79 @@ def registrar_nueva_transaccion(id_cuenta, dh, cantidad, glosa, fecha):
     except Exception as e:
         print(f"❌ Error al registrar la transacción: {e}")
         return False
+    
+
+
+def eliminar_transaccion(glosa, fecha, id_cuenta, cantidad, dh):
+    """
+    Elimina una transacción de un diario específico.
+    :param glosa: Glosa del diario.
+    :param fecha: Fecha del diario (YYYY-MM-DD).
+    :param id_cuenta: ID de la cuenta.
+    :param cantidad: Monto de la transacción.
+    :param dh: Tipo de movimiento ('D' para Débito, 'H' para Crédito).
+    :return: JSON con el resultado de la operación.
+    """
+    with obtener_conexion() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                DELETE FROM transaccion 
+                WHERE id_diario = (SELECT d.id_diario FROM diario d WHERE d.glosa = %s AND d.fecha = %s) 
+                AND id_cuenta = %s 
+                AND cantidad = %s 
+                AND dh = %s;
+                """, 
+                (glosa, fecha, id_cuenta, cantidad, dh)
+            )
+            
+            # Verificar si se eliminó alguna fila
+            filas_afectadas = cursor.rowcount
+            conn.commit()
+            
+            return json.dumps(
+                {"mensaje": "Transacción eliminada correctamente." if filas_afectadas > 0 else "No se encontró la transacción."},
+                indent=4,
+                ensure_ascii=False
+            )
+
+import json
+
+def actualizar_transaccion(glosa, fecha, id_cuenta, cantidad_actual, dh_actual, nueva_cantidad, nuevo_dh, nueva_cuenta):
+    """
+    Actualiza una transacción en la tabla 'transaccion'.
+    
+    :param glosa: Glosa del diario.
+    :param fecha: Fecha del diario (YYYY-MM-DD).
+    :param id_cuenta: ID de la cuenta a modificar.
+    :param cantidad_actual: Cantidad actual en la transacción.
+    :param dh_actual: Tipo actual de movimiento ('D' o 'H').
+    :param nueva_cantidad: Nuevo valor de la cantidad.
+    :param nuevo_dh: Nuevo tipo de movimiento ('D' o 'H').
+    :param nueva_cuenta: Nuevo ID de la cuenta.
+    :return: JSON con el resultado de la operación.
+    """
+    with obtener_conexion() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE transaccion 
+                SET cantidad = %s, dh = %s, id_cuenta = %s
+                WHERE id_diario = (
+                    SELECT id_diario FROM diario WHERE glosa = %s AND fecha = %s
+                )
+                AND id_cuenta = %s 
+                AND cantidad = %s 
+                AND dh = %s;
+                """, 
+                (nueva_cantidad, nuevo_dh, nueva_cuenta, glosa, fecha, id_cuenta, cantidad_actual, dh_actual)
+            )
+            
+            filas_afectadas = cursor.rowcount
+            conn.commit()
+            
+            return json.dumps(
+                {"mensaje": "Transacción actualizada correctamente." if filas_afectadas > 0 else "No se encontró la transacción."},
+                indent=4,
+                ensure_ascii=False
+            )

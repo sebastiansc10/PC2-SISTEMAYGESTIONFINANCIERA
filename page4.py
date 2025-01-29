@@ -4,12 +4,13 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem, QVBoxLayout, QPushButton, QHBoxLayout, QTableWidget,
     QMessageBox, QHeaderView, QComboBox, QDialog, QLabel, QLineEdit, QFormLayout
 )
-from app.funciones.DiarioTransaccion import mostrar_transacciones, obtener_cuentas, registrar_nueva_transaccion
+from app.funciones.DiarioTransaccion import mostrar_transacciones, obtener_cuentas, registrar_nueva_transaccion, eliminar_transaccion, actualizar_transaccion
 
-class NuevaTransaccionDialog(QDialog):
-    def __init__(self, parent=None):
+class TransaccionDialog(QDialog):
+    def __init__(self, parent=None, transaccion=None):
         super().__init__(parent)
-        self.setWindowTitle("Nueva Transacción")
+        self.setWindowTitle("Nueva Transacción" if transaccion is None else "Actualizar Transacción")
+        self.transaccion = transaccion
         self.setup_ui()
         
     def setup_ui(self):
@@ -19,7 +20,7 @@ class NuevaTransaccionDialog(QDialog):
         self.cuenta_combo = QComboBox()
         self.cuentas = obtener_cuentas()
         for id_cuenta, nombre in self.cuentas.items():
-            self.cuenta_combo.addItem(nombre, id_cuenta)
+            self.cuenta_combo.addItem(f"{id_cuenta} - {nombre}", id_cuenta)
         
         # Combobox para Debe/Haber
         self.dh_combo = QComboBox()
@@ -46,6 +47,13 @@ class NuevaTransaccionDialog(QDialog):
         
         layout.addRow("", buttons)
 
+        # Si es una actualización, llenar los campos con los datos actuales
+        if self.transaccion:
+            index = self.cuenta_combo.findData(self.transaccion['id_cuenta'])
+            self.cuenta_combo.setCurrentIndex(index)
+            self.dh_combo.setCurrentText(self.transaccion['tipo'])
+            self.cantidad_input.setText(str(self.transaccion['cantidad']))
+
 class Page4(QtWidgets.QWidget):
     def __init__(self, main_window, glosa, fecha, parent=None):
         super().__init__(parent)
@@ -66,7 +74,7 @@ class Page4(QtWidgets.QWidget):
         # Tabla
         self.tableWidget = QTableWidget()
         self.tableWidget.setColumnCount(4)
-        self.tableWidget.setHorizontalHeaderLabels(["📅 Fecha", "🏦 Cuenta", "💰 Debe", "💳 Haber"])
+        self.tableWidget.setHorizontalHeaderLabels(["Código de cuenta", "Nombre de cuenta", "Debe", "Haber"])
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.tableWidget.setAlternatingRowColors(True)
         self.tableWidget.setStyleSheet("""
@@ -92,11 +100,19 @@ class Page4(QtWidgets.QWidget):
         btn_layout = QHBoxLayout()
         
         self.btn_nueva_transaccion = QPushButton("➕ Nueva Transacción")
+        self.btn_actualizar_transaccion = QPushButton("🔄 Actualizar Transacción")
+        self.btn_borrar_transaccion = QPushButton("🗑️ Borrar Transacción")
         self.btn_back_diarios = QPushButton("🔙 Volver a Diarios")
         self.btn_back_home = QPushButton("🏠 Volver al Inicio")
         
         self.btn_nueva_transaccion.setStyleSheet(
             "background-color: #4CAF50; color: white; padding: 8px; border-radius: 5px;"
+        )
+        self.btn_actualizar_transaccion.setStyleSheet(
+            "background-color: #FFA500; color: white; padding: 8px; border-radius: 5px;"
+        )
+        self.btn_borrar_transaccion.setStyleSheet(
+            "background-color: #F44336; color: white; padding: 8px; border-radius: 5px;"
         )
         self.btn_back_diarios.setStyleSheet(
             "background-color: #34495E; color: white; padding: 8px; border-radius: 5px;"
@@ -107,10 +123,14 @@ class Page4(QtWidgets.QWidget):
         
         # Conectar señales
         self.btn_nueva_transaccion.clicked.connect(self.mostrar_dialogo_nueva_transaccion)
+        self.btn_actualizar_transaccion.clicked.connect(self.mostrar_dialogo_actualizar_transaccion)
+        self.btn_borrar_transaccion.clicked.connect(self.borrar_transaccion_seleccionada)
         self.btn_back_diarios.clicked.connect(self.volver_a_diarios)
         self.btn_back_home.clicked.connect(self.volver_al_inicio)
         
         btn_layout.addWidget(self.btn_nueva_transaccion)
+        btn_layout.addWidget(self.btn_actualizar_transaccion)
+        btn_layout.addWidget(self.btn_borrar_transaccion)
         btn_layout.addWidget(self.btn_back_diarios)
         btn_layout.addWidget(self.btn_back_home)
         
@@ -123,7 +143,7 @@ class Page4(QtWidgets.QWidget):
 
     def mostrar_dialogo_nueva_transaccion(self):
         """Muestra el diálogo para agregar una nueva transacción."""
-        dialogo = NuevaTransaccionDialog(self)
+        dialogo = TransaccionDialog(self)
         if dialogo.exec_() == QDialog.Accepted:
             try:
                 # Obtener datos del diálogo
@@ -140,6 +160,86 @@ class Page4(QtWidgets.QWidget):
             except ValueError:
                 QMessageBox.warning(self, "Error", "Por favor ingrese una cantidad válida")
 
+    def mostrar_dialogo_actualizar_transaccion(self):
+        """Muestra el diálogo para actualizar una transacción existente."""
+        selected_items = self.tableWidget.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "Error", "Por favor, seleccione una transacción para actualizar.")
+            return
+
+        row = selected_items[0].row()
+        id_cuenta = self.tableWidget.item(row, 0).text()
+        cuenta = self.tableWidget.item(row, 1).text()
+        
+        cantidad = 0
+        tipo = ''
+        for col in range(2, 4):
+            valor = self.tableWidget.item(row, col).text()
+            if valor != '0':
+                cantidad = float(valor)
+                tipo = 'Debe' if col == 2 else 'Haber'
+                break
+
+        transaccion_actual = {
+            'id_cuenta': id_cuenta,
+            'cuenta': cuenta,
+            'tipo': tipo,
+            'cantidad': cantidad
+        }
+
+        dialogo = TransaccionDialog(self, transaccion_actual)
+        if dialogo.exec_() == QDialog.Accepted:
+            try:
+                # Obtener nuevos datos del diálogo
+                nueva_cuenta = dialogo.cuenta_combo.currentData()
+                nuevo_dh = dialogo.dh_combo.currentText()
+                nueva_cantidad = float(dialogo.cantidad_input.text())
+                
+                # Actualizar la transacción
+                resultado = json.loads(actualizar_transaccion(
+                    self.glosa, 
+                    self.fecha, 
+                    transaccion_actual['id_cuenta'], 
+                    transaccion_actual['cantidad'], 
+                    'Debe' if transaccion_actual['tipo'] == 'Debe' else 'Haber',
+                    nueva_cantidad,
+                    'Debe' if nuevo_dh == 'Debe' else 'Haber',
+                    nueva_cuenta
+                ))
+                
+                QMessageBox.information(self, "Resultado", resultado["mensaje"])
+                self.obtener_transacciones()  # Actualizar la tabla
+            except ValueError:
+                QMessageBox.warning(self, "Error", "Por favor ingrese una cantidad válida")
+
+    def borrar_transaccion_seleccionada(self):
+        """Borra la transacción seleccionada en la tabla."""
+        selected_items = self.tableWidget.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "Error", "Por favor, seleccione una transacción para borrar.")
+            return
+
+        row = selected_items[0].row()
+        id_cuenta = self.tableWidget.item(row, 0).text()
+        
+        cantidad = 0
+        dh = ''
+        for col in range(2, 4):
+            valor = self.tableWidget.item(row, col).text()
+            if valor != '0':
+                cantidad = float(valor)
+                dh = 'Debe' if col == 2 else 'Haber'
+                break
+
+        respuesta = QMessageBox.question(self, "Confirmar borrado", 
+                                         "¿Está seguro de que desea borrar esta transacción?",
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        
+        if respuesta == QMessageBox.Yes:
+            resultado = json.loads(eliminar_transaccion(self.glosa, self.fecha, id_cuenta, cantidad, dh))
+            QMessageBox.information(self, "Resultado", resultado["mensaje"])
+            self.obtener_transacciones()  # Actualizar la tabla
+
     def obtener_transacciones(self):
         """Obtiene las transacciones de un diario específico y las muestra en la tabla."""
         resultado_json = mostrar_transacciones(self.glosa, self.fecha)
@@ -147,14 +247,14 @@ class Page4(QtWidgets.QWidget):
         self.tableWidget.setRowCount(len(resultado))
         
         for row, transaccion in enumerate(resultado):
-            self.tableWidget.setItem(row, 0, QTableWidgetItem(self.fecha))
+            self.tableWidget.setItem(row, 0, QTableWidgetItem(str(transaccion["id_cuenta"])))
             self.tableWidget.setItem(row, 1, QTableWidgetItem(transaccion["cuenta"]))
             
             if transaccion["tipo"] == "Debe":
                 self.tableWidget.setItem(row, 2, QTableWidgetItem(str(transaccion["cantidad"])))
-                self.tableWidget.setItem(row, 3, QTableWidgetItem(""))
+                self.tableWidget.setItem(row, 3, QTableWidgetItem("0"))
             else:
-                self.tableWidget.setItem(row, 2, QTableWidgetItem(""))
+                self.tableWidget.setItem(row, 2, QTableWidgetItem("0"))
                 self.tableWidget.setItem(row, 3, QTableWidgetItem(str(transaccion["cantidad"])))
 
     def volver_a_diarios(self):
@@ -162,3 +262,11 @@ class Page4(QtWidgets.QWidget):
 
     def volver_al_inicio(self):
         self.main_window.stackedWidget.setCurrentIndex(0)
+
+# Asegúrate de que las siguientes funciones estén definidas en el archivo correspondiente:
+# obtener_conexion()
+# decimal_default()
+# registrar_nueva_transaccion()
+# eliminar_transaccion()
+# actualizar_transaccion()
+
