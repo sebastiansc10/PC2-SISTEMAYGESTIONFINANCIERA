@@ -56,7 +56,7 @@ def calcularbalance(fechainicio, fechafin):
                                     ELSE 0 
                                 END) >= 0 THEN SUM(CASE 
                                                     WHEN t.DH = 'Debe' THEN t.Cantidad
-                                                    WHEN t.DH = 'Haber' THEN 0
+                                                    WHEN t.DH = 'Haber' THEN -t.Cantidad
                                                     ELSE 0 
                                                 END)
                         ELSE 0
@@ -69,7 +69,7 @@ def calcularbalance(fechainicio, fechafin):
                                     ELSE 0 
                                 END) < 0 THEN -1 * SUM(CASE 
                                                     WHEN t.DH = 'Haber' THEN -t.Cantidad
-                                                    WHEN t.DH = 'Debe' THEN 0
+                                                    WHEN t.DH = 'Debe' THEN t.Cantidad
                                                     ELSE 0 
                                                 END)
                         ELSE 0

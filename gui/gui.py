@@ -33,16 +33,22 @@ def calcular():
 
     # Botón para generar reporte
     generar_button = QPushButton("Generar Reportes")
-    generar_button.clicked.connect(lambda: generar_reporte(fecha_inicial.date(), fecha_cierre.date()))
+    generar_button.clicked.connect(lambda: generar_reporte(fecha_inicial.date(), fecha_cierre.date(), ventana_calcular))
     layout_calcular.addWidget(generar_button)
 
     # Establecer el layout y mostrar la ventana
     ventana_calcular.setLayout(layout_calcular)
     ventana_calcular.exec_()  # Usamos exec_() para que la ventana se quede abierta hasta que se cierre
 
-def generar_reporte(fecha_inicial, fecha_cierre):
+def generar_reporte(fecha_inicial, fecha_cierre, ventana_calcular):
     # Aquí puedes añadir la lógica para generar el reporte con las fechas seleccionadas
     QMessageBox.information(None, "Generar Reportes", f"Reportes generados desde {fecha_inicial.toString()} hasta {fecha_cierre.toString()}")
+    
+    # Mostrar el mensaje de confirmación y luego cerrar la ventana
+    QMessageBox.information(None, "Reporte generado", "Reporte generado, para verlos seleccione la opción 'Reportes'")
+    
+    # Cerrar la ventana de cálculo
+    ventana_calcular.close()
 
 def reporte():
     QMessageBox.information(None, "Reporte", "Se ha abierto la sección de Reporte")
