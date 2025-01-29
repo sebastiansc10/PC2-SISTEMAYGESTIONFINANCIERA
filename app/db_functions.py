@@ -8,7 +8,7 @@ def mayorizar():
             cursor.execute(
                 """
                 SELECT 
-                    t.ID_Cuenta,  -- Especificamos que `ID_Cuenta` proviene de la tabla `Transaccion`
+                    t.ID_Cuenta,  -- Especificamos que `ID_Cuenta` p    roviene de la tabla `Transaccion`
                     c.Nombre_Cuenta,  -- Especificamos que `Nombre_Cuenta` proviene de la tabla `Cuenta`
                     SUM(CASE 
                             WHEN t.DH = 'Debe' THEN t.Cantidad  -- Especificamos que `DH` y `Cantidad` provienen de `Transaccion`
