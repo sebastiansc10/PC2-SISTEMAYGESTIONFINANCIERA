@@ -1,103 +1,199 @@
 import json
+import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-from app.funciones.DiarioTransaccion import mostrar_diario  # Importa la función desde base_de_datos
+from PyQt5.QtWidgets import (
+    QTableWidgetItem, QDateEdit, QPushButton, QVBoxLayout, QHBoxLayout,
+    QLineEdit, QMessageBox, QFileDialog, QHeaderView, QTableWidget
+)
+from PyQt5.QtCore import QDate
+from app.funciones.DiarioTransaccion import mostrar_diario  # Asegúrate de que este módulo existe
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1000, 750)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
+class Ui_MainWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("📊 Sistema Contable - Grupo 2")
+        self.resize(1200, 800)
+        self.setStyleSheet("""
+            background-color: #f5f5f5;
+            font-family: Arial;
+            font-size: 14px;
+        """)
+
+        self.centralwidget = QtWidgets.QWidget(self)
+        self.setCentralWidget(self.centralwidget)
+
+        self.layout = QVBoxLayout(self.centralwidget)
         self.stackedWidget = QtWidgets.QStackedWidget(self.centralwidget)
-        self.stackedWidget.setGeometry(QtCore.QRect(0, 0, 1001, 751))
-        self.stackedWidget.setObjectName("stackedWidget")
-        
-        # Página 1
-        self.page = QtWidgets.QWidget()
-        self.page.setObjectName("page")
-        
-        # Botón para cambiar a página 2
-        self.input = QtWidgets.QPushButton(self.page)
-        self.input.setGeometry(QtCore.QRect(280, 470, 93, 28))
-        self.input.setObjectName("input")
-        self.output = QtWidgets.QPushButton(self.page)
-        self.output.setGeometry(QtCore.QRect(540, 470, 93, 28))
-        self.output.setObjectName("output")
-        self.label_2 = QtWidgets.QLabel(self.page)
-        self.label_2.setGeometry(QtCore.QRect(280, 250, 171, 21))
-        self.label_2.setObjectName("label_2")
-        
-        # Conectamos el botón "Ver diarios" a la acción de cambiar de página
-        self.input.clicked.connect(self.mostrar_diarios)
+        self.layout.addWidget(self.stackedWidget)
 
+        # ✅ Página Principal
+        self.page = QtWidgets.QWidget()
+        self.page_layout = QVBoxLayout(self.page)
+
+        self.label_2 = QtWidgets.QLabel("📊 Sistema Contable - Grupo 2")
+        self.label_2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_2.setStyleSheet("font-size: 18px; font-weight: bold; margin-bottom: 20px;")
+
+        self.input = QPushButton("📜 Ver diarios")
+        self.input.setStyleSheet("""
+            background-color: #2196F3;
+            color: white;
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 5px;
+        """)
+        self.output = QPushButton("📊 Ver reportes")
+        self.output.setStyleSheet("""
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 5px;
+        """)
+
+        self.page_layout.addWidget(self.label_2)
+        self.page_layout.addWidget(self.input)
+        self.page_layout.addWidget(self.output)
+        self.page.setLayout(self.page_layout)
         self.stackedWidget.addWidget(self.page)
-        
-        # Página 2
+
+        # ✅ Página de Diarios
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setObjectName("page_2")
-        self.label = QtWidgets.QLabel(self.page_2)
-        self.label.setGeometry(QtCore.QRect(400, 40, 55, 16))
-        self.label.setObjectName("label")
-        self.tableWidget = QtWidgets.QTableWidget(self.page_2)
-        self.tableWidget.setGeometry(QtCore.QRect(160, 80, 581, 161))
-        self.tableWidget.setRowCount(1)
+        self.page2_layout = QVBoxLayout(self.page_2)
+
+        self.label = QtWidgets.QLabel("📜 Diarios Registrados")
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("font-size: 18px; font-weight: bold; margin-bottom: 10px;")
+
+        # Barra de Búsqueda
+        self.search_bar = QLineEdit()
+        self.search_bar.setPlaceholderText("🔍 Buscar en glosas...")
+        self.search_bar.setStyleSheet("""
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        """)
+        self.search_bar.textChanged.connect(self.filtrar_tabla)  # ✅ Corrección aquí
+
+        # ✅ **Tabla Mejorada**
+        self.tableWidget = QTableWidget()
         self.tableWidget.setColumnCount(2)
-        self.tableWidget.setObjectName("tableWidget")
-        item = QtWidgets.QTableWidgetItem()
-        self.tableWidget.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.tableWidget.setHorizontalHeaderItem(1, item)
-        self.tableWidget.horizontalHeader().setStretchLastSection(False)
+        self.tableWidget.setHorizontalHeaderLabels(["📝 Glosa", "📅 Fecha"])
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tableWidget.setAlternatingRowColors(True)  # ✅ Alternar colores de filas
+        self.tableWidget.setStyleSheet("""
+            QTableWidget {
+                background-color: white;
+                gridline-color: #ccc;
+            }
+            QHeaderView::section {
+                background-color: #1976D2;
+                color: white;
+                padding: 5px;
+                font-size: 14px;
+                font-weight: bold;
+                border: 1px solid #ccc;
+            }
+            QTableWidget::item:selected {
+                background-color: #90CAF9;
+                color: black;
+            }
+        """)
+
+        # ✅ Botones de Acción
+        self.btn_add = QPushButton("➕ Agregar Fila")
+        self.btn_delete = QPushButton("🗑️ Eliminar Fila")
+        self.btn_export = QPushButton("📤 Exportar CSV")
+
+        self.btn_add.setStyleSheet("background-color: #009688; color: white; padding: 8px; border-radius: 5px;")
+        self.btn_delete.setStyleSheet("background-color: #e74c3c; color: white; padding: 8px; border-radius: 5px;")
+        self.btn_export.setStyleSheet("background-color: #f39c12; color: white; padding: 8px; border-radius: 5px;")
+
+        self.btn_add.clicked.connect(self.agregar_fila)
+        self.btn_delete.clicked.connect(self.eliminar_fila)
+        self.btn_export.clicked.connect(self.exportar_csv)  # ✅ Corrección aquí
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addWidget(self.btn_add)
+        btn_layout.addWidget(self.btn_delete)
+        btn_layout.addWidget(self.btn_export)
+
+        self.page2_layout.addWidget(self.label)
+        self.page2_layout.addWidget(self.search_bar)
+        self.page2_layout.addWidget(self.tableWidget)
+        self.page2_layout.addLayout(btn_layout)
+        self.page_2.setLayout(self.page2_layout)
         self.stackedWidget.addWidget(self.page_2)
 
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+        # ✅ Conectar botones
+        self.input.clicked.connect(self.mostrar_diarios)
 
-        self.retranslateUi(MainWindow)
-        self.stackedWidget.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.input.setText(_translate("MainWindow", "Ver diarios"))
-        self.output.setText(_translate("MainWindow", "Ver reportes"))
-        self.label_2.setText(_translate("MainWindow", "Sistema contable"))
-        self.label.setText(_translate("MainWindow", "Diarios"))
-        item = self.tableWidget.horizontalHeaderItem(0)
-        item.setText(_translate("MainWindow", "Glosa"))
-        item = self.tableWidget.horizontalHeaderItem(1)
-        item.setText(_translate("MainWindow", "Fecha"))
-    
     def mostrar_diarios(self):
-        """Función para mostrar la página 2 (diarios)."""
-        self.stackedWidget.setCurrentIndex(1)  # Cambiar a la página 2
-        # Poblar la tabla con los datos
-        datos = self.obtener_diarios()  # Obtener los datos
-        self.poblar_tabla(datos)  # Llamar a la función para poblar la tabla
+        """Muestra la página de diarios y llena la tabla."""
+        self.stackedWidget.setCurrentIndex(1)
+        datos = self.obtener_diarios()
+        self.poblar_tabla(datos)
 
     def obtener_diarios(self):
-        """Llama a la función mostrar_diario desde el archivo base_de_datos."""
-        resultado_json = mostrar_diario()  # Obtenemos el JSON
-        # Convertimos el JSON a un diccionario para obtener las claves y valores
+        """Obtiene los datos de la base de datos."""
+        resultado_json = mostrar_diario()
         resultado = json.loads(resultado_json)
-        return [(fecha, glosa) for fecha, glosa in resultado.items()]
+        return [(glosa, fecha) for fecha, glosa in resultado.items()]
 
     def poblar_tabla(self, datos):
-        """Llena la tabla con los datos obtenidos."""
-        self.tableWidget.setRowCount(len(datos))  # Establecemos el número de filas según los datos
-        for row, (fecha, glosa) in enumerate(datos):
-            self.tableWidget.setItem(row, 0, QtWidgets.QTableWidgetItem(fecha))  # Columna de fecha
-            self.tableWidget.setItem(row, 1, QtWidgets.QTableWidgetItem(glosa))  # Columna de glosa
+        """Llena la tabla y agrega QDateEdit en la columna Fecha."""
+        self.tableWidget.setRowCount(len(datos))
+        for row, (glosa, fecha) in enumerate(datos):
+            self.tableWidget.setItem(row, 0, QTableWidgetItem(glosa))
 
+            date_widget = QDateEdit()
+            date_widget.setCalendarPopup(True)
+            date_widget.setDate(QDate.fromString(fecha, "yyyy-MM-dd"))
+            self.tableWidget.setCellWidget(row, 1, date_widget)
+
+    def agregar_fila(self):
+        """Agrega una nueva fila con un QDateEdit en la columna de fecha."""
+        row = self.tableWidget.rowCount()
+        self.tableWidget.insertRow(row)
+        self.tableWidget.setItem(row, 0, QTableWidgetItem("Nueva Glosa"))
+
+        date_widget = QDateEdit()
+        date_widget.setCalendarPopup(True)
+        date_widget.setDate(QDate.currentDate())
+        self.tableWidget.setCellWidget(row, 1, date_widget)
+
+    def eliminar_fila(self):
+        """Elimina la fila seleccionada."""
+        row = self.tableWidget.currentRow()
+        if row >= 0:
+            self.tableWidget.removeRow(row)
+        else:
+            QMessageBox.warning(self, "Error", "Seleccione una fila para eliminar.")
+
+    def filtrar_tabla(self):
+        """Filtra la tabla en base al texto ingresado en la barra de búsqueda."""
+        filtro = self.search_bar.text().lower()
+        for row in range(self.tableWidget.rowCount()):
+            item = self.tableWidget.item(row, 0)
+            if item and filtro in item.text().lower():
+                self.tableWidget.setRowHidden(row, False)
+            else:
+                self.tableWidget.setRowHidden(row, True)
+
+    def exportar_csv(self):
+        """Exporta los datos de la tabla a un archivo CSV."""
+        path, _ = QFileDialog.getSaveFileName(self, "Guardar CSV", "", "Archivos CSV (*.csv)")
+        if path:
+            with open(path, "w", encoding="utf-8") as file:
+                file.write("Glosa,Fecha\n")
+                for row in range(self.tableWidget.rowCount()):
+                    glosa = self.tableWidget.item(row, 0).text()
+                    fecha = self.tableWidget.cellWidget(row, 1).date().toString("yyyy-MM-dd")
+                    file.write(f"{glosa},{fecha}\n")
+            QMessageBox.information(self, "Éxito", "El archivo CSV ha sido guardado correctamente.")
 
 if __name__ == "__main__":
-    import sys
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
+    ventana = Ui_MainWindow()
+    ventana.show()
     sys.exit(app.exec_())
