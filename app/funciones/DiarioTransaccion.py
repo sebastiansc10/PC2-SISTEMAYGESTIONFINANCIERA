@@ -42,6 +42,33 @@ def registrar_diario(fecha, glosa):
         print(f"❌ Error al registrar el asiento: {e}")
         return None
 
+def actualizar_diario(fecha, glosa, fechaantigua, glosaantigua):
+    """Actualiza un asiento en la tabla Diario y devuelve su ID actualizado."""
+    try:
+        with obtener_conexion() as conn:
+            with conn.cursor() as cursor:
+                # Actualizar el diario
+                cursor.execute("""
+                    UPDATE diario 
+                    SET glosa = %s, fecha = %s 
+                    WHERE glosa = %s AND fecha = %s
+                    RETURNING id_diario;
+                """, (glosa, fecha, glosaantigua, fechaantigua))
+
+                id_diario = cursor.fetchone()  # Obtener el ID actualizado
+
+                if id_diario:  # Si hay un resultado, se confirma la transacción
+                    conn.commit()
+                    print(f"✅ Asiento actualizado con ID {id_diario[0]}")
+                    return id_diario[0]
+                else:
+                    print("⚠️ No se encontró ningún asiento con esos datos.")
+                    return None
+    except Exception as e:
+        print(f"❌ Error al actualizar el asiento: {e}")
+        return None
+
+    
 
 def obtener_cuentas():
     """Devuelve un diccionario con las cuentas disponibles en la tabla Cuenta."""
