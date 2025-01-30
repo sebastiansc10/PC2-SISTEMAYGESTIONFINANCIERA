@@ -128,7 +128,7 @@ class Page3(QtWidgets.QWidget):
                 content_layout.addWidget(self.tabla_resumen)
             elif titulo == "Estado de resultados":
                 self.tabla_resultados = self.crear_tabla_generica(3, ["Cuenta", "Monto", "Porcentaje del total"])
-                self.tabla_resultados.horizontalHeader().setVisible(False)
+                # self.tabla_resultados.horizontalHeader().setVisible(False)
                 content_layout.addWidget(self.tabla_resultados)
 
         self.scroll_area.setWidget(content_widget)
@@ -610,6 +610,13 @@ class Page3(QtWidgets.QWidget):
         self.tabla_resumen.setItem(0, 1, QTableWidgetItem(f"{activo_total:.2f}"))
         self.tabla_resumen.setItem(0, 2, QTableWidgetItem("Total pasivo + patrimonio"))
         self.tabla_resumen.setItem(0, 3, QTableWidgetItem(f"{pasivo_patrimonio_total:.2f}"))
+
+        # Colorear la fila de total
+        for col in range(4):  # 4 columnas en la tabla
+            item = self.tabla_resumen.item(0, col)
+            if item:
+                item.setBackground(QBrush(QColor(0, 255, 0)))  # Fondo verde
+                item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
 
         # Ajustar el tamaño de las filas y columnas
         self.tabla_resumen.resizeColumnsToContents()
