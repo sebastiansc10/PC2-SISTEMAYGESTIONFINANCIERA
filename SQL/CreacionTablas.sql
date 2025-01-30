@@ -30,6 +30,6 @@ CREATE TABLE Transaccion
   ID_Transaccion SERIAL PRIMARY KEY,
   ID_Diario INT NOT NULL,
   ID_Cuenta INT NOT NULL,
-  FOREIGN KEY (ID_Diario) REFERENCES Diario(ID_Diario),
+  FOREIGN KEY (ID_Diario) REFERENCES Diario(ID_Diario) on delete cascade,
   FOREIGN KEY (ID_Cuenta) REFERENCES Cuenta(ID_Cuenta)
 );
