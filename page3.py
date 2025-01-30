@@ -153,32 +153,32 @@ class Page3(QtWidgets.QWidget):
         self.setLayout(self.page3_layout)
 
     def crear_tabla_generica(self, num_columnas, headers):
-        tabla = QTableWidget()
-        tabla.setColumnCount(num_columnas)
-        tabla.setHorizontalHeaderLabels(headers)
-        tabla.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        tabla.verticalHeader().setVisible(False)
-        tabla.setStyleSheet("""
-            QTableWidget {
-                background-color: #000000;
-                color: #ffffff;  /* Color de la fuente en blanco */
-                border: 2px solid #00CED1;
-                border-radius: 4px;
-            }
-            QHeaderView::section {
-                background-color: #00CED1;
-                color: #000000;  /* Color de la fuente del encabezado en negro */
-                padding: 6px;
-                border: 1px solid #00CED1;
-                font-weight: bold;
-            }
-            QTableWidget::item {
-                border-bottom: 1px solid #00CED1;
-                color: #ffffff;  /* Color de la fuente en blanco */
-            }
-        """)
-        tabla.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        return tabla
+            tabla = QTableWidget()
+            tabla.setColumnCount(num_columnas)
+            tabla.setHorizontalHeaderLabels(headers)
+            tabla.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            tabla.verticalHeader().setVisible(False)
+            tabla.setStyleSheet("""
+                QTableWidget {
+                    background-color: #000000;
+                    color: #ffffff;  /* Color de la fuente en blanco */
+                    border: 2px solid #00CED1;
+                    border-radius: 4px;
+                }
+                QHeaderView::section {
+                    background-color: #00CED1;
+                    color: #000000;  /* Color de la fuente del encabezado en negro */
+                    padding: 6px;
+                    border: 1px solid #00CED1;
+                    font-weight: bold;
+                }
+                QTableWidget::item:selected {
+                    background-color: #00CED1;  /* Color de fondo cuando una celda está seleccionada */
+                    color: #000000;  /* Color de texto cuando una celda está seleccionada */
+                }
+            """)
+            tabla.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+            return tabla
 
     def crear_tabla(self):
         tabla = QTableWidget()
@@ -248,9 +248,16 @@ class Page3(QtWidgets.QWidget):
         haber_item = QTableWidgetItem(f"{total_haber_valor:.2f}")
 
         # Establecer el color de fondo para las celdas de total
-        color_total = QColor(255, 255, 200)  # Amarillo claro
-        debe_item.setBackground(QBrush(color_total))
-        haber_item.setBackground(QBrush(color_total))
+        #color_total = QColor(255, 255, 200)  # Amarillo claro
+        #debe_item.setBackground(QBrush(color_total))
+        #haber_item.setBackground(QBrush(color_total))
+
+        # Colorear la fila de total
+        for col in range(2):
+            item = self.tabla_balance.item(last_row, col)
+            if item:
+                item.setBackground(QBrush(QColor(255, 255, 200)))  # Fondo amarillo claro
+                item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
 
         self.tabla_balance.setItem(last_row, 2, debe_item)
         self.tabla_balance.setItem(last_row, 3, haber_item)
@@ -357,7 +364,10 @@ class Page3(QtWidgets.QWidget):
         
         # Colorear la fila de total
         for col in range(2):
-            self.tabla_activo_corriente.item(last_row, col).setBackground(QBrush(QColor(255, 255, 200)))
+            item = self.tabla_activo_corriente.item(last_row, col)
+            if item:
+                item.setBackground(QBrush(QColor(255, 255, 200)))  # Fondo amarillo claro
+                item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
         
         # Ajustar el tamaño de las filas y columnas
         self.tabla_activo_corriente.resizeColumnsToContents()
@@ -402,8 +412,12 @@ class Page3(QtWidgets.QWidget):
         self.tabla_activo_no_corriente.setItem(last_row, 1, QTableWidgetItem(f"{total_activo_no_corriente['Total_Saldo']:.2f}"))
         
         # Colorear la fila de total
+        # Colorear la fila de total
         for col in range(2):
-            self.tabla_activo_no_corriente.item(last_row, col).setBackground(QBrush(QColor(255, 255, 200)))
+            item = self.tabla_activo_no_corriente.item(last_row, col)
+            if item:
+                item.setBackground(QBrush(QColor(255, 255, 200)))  # Fondo amarillo claro
+                item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
         
         # Ajustar el tamaño de las filas y columnas
         self.tabla_activo_no_corriente.resizeColumnsToContents()
@@ -448,8 +462,12 @@ class Page3(QtWidgets.QWidget):
         self.tabla_pasivos.setItem(last_row, 1, QTableWidgetItem(f"{total_pasivos['Total_Saldo']:.2f}"))
         
         # Colorear la fila de total
+# Colorear la fila de total
         for col in range(2):
-            self.tabla_pasivos.item(last_row, col).setBackground(QBrush(QColor(255, 255, 200)))
+            item = self.tabla_pasivos.item(last_row, col)
+            if item:
+                item.setBackground(QBrush(QColor(255, 255, 200)))  # Fondo amarillo claro
+                item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
         
         # Ajustar el tamaño de las filas y columnas
         self.tabla_pasivos.resizeColumnsToContents()
@@ -496,10 +514,13 @@ class Page3(QtWidgets.QWidget):
         row = len(patrimonio_data) + 1
         self.tabla_patrimonio.setItem(row, 0, QTableWidgetItem("Utilidades acumuladas"))
         self.tabla_patrimonio.setItem(row, 1, QTableWidgetItem(f"{utilidad_acumulada:.2f}"))
-        
-        # Colorear la fila de utilidades acumuladas de naranja
+                
+        # Colorear la fila de utilidades acumuladas
         for col in range(2):
-            self.tabla_patrimonio.item(row, col).setBackground(QBrush(QColor(255, 200, 100)))
+            item = self.tabla_patrimonio.item(row, col)
+            if item:
+                item.setBackground(QBrush(QColor(255, 200, 100)))  # Fondo naranja
+                item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
         
         total_patrimonio += utilidad_acumulada
         
@@ -510,7 +531,10 @@ class Page3(QtWidgets.QWidget):
         
         # Colorear la fila de total patrimonio de amarillo claro
         for col in range(2):
-            self.tabla_patrimonio.item(row, col).setBackground(QBrush(QColor(255, 255, 200)))
+            item = self.tabla_patrimonio.item(row, col)
+            if item:
+                item.setBackground(QBrush(QColor(255, 255, 200)))  # Fondo amarillo claro
+                item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
         
         # Ajustar el tamaño de las filas y columnas
         self.tabla_patrimonio.resizeColumnsToContents()
@@ -551,11 +575,15 @@ class Page3(QtWidgets.QWidget):
         item_porcentaje.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.tabla_resultados.setItem(row, 2, item_porcentaje)
 
+    # Asegúrate de que el método colorear_fila también establezca el texto en negro
     def colorear_fila(self, nombre_fila, color):
         for row in range(self.tabla_resultados.rowCount()):
             if self.tabla_resultados.item(row, 0).text() == nombre_fila:
                 for col in range(self.tabla_resultados.columnCount()):
-                    self.tabla_resultados.item(row, col).setBackground(QBrush(color))
+                    item = self.tabla_resultados.item(row, col)
+                    if item:
+                        item.setBackground(QBrush(color))
+                        item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
                 break
 
 
