@@ -10,7 +10,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("📊 Sistema Contable - Grupo 2")
         self.resize(1200, 800)
         self.setStyleSheet("""
-            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #f8f9fa, stop:1 #e9ecef);
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #000000, stop:1 #1a1a1a);
+            color: #ffffff;
         """)
 
         self.centralwidget = QtWidgets.QWidget(self)
@@ -20,7 +21,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.stackedWidget = QtWidgets.QStackedWidget(self.centralwidget)
         self.layout.addWidget(self.stackedWidget)
 
-        # Inicializar páginas
         self.page1 = Page1(self)
         self.page2 = Page2(self)
         self.page3 = Page3(self)
@@ -29,29 +29,28 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.stackedWidget.addWidget(self.page2)
         self.stackedWidget.addWidget(self.page3)
 
-        # Conectar botones de navegación
         self.page1.btn_diarios.clicked.connect(self.mostrar_diarios)
         self.page1.btn_reportes.clicked.connect(self.mostrar_formulario_reporte)
 
         self.showMaximized()
 
     def mostrar_diarios(self):
-        """Muestra la página de diarios."""
         self.stackedWidget.setCurrentIndex(1)
         datos = self.page2.obtener_diarios()
         self.page2.poblar_tabla(datos)
 
     def mostrar_formulario_reporte(self):
-        """Muestra el formulario para ingresar las fechas antes de ver reportes."""
         self.formulario_reporte = QtWidgets.QWidget()
         formulario_layout = QtWidgets.QVBoxLayout(self.formulario_reporte)
 
         self.fecha_inicio_label = QtWidgets.QLabel("📅 Fecha de inicio:")
+        self.fecha_inicio_label.setStyleSheet("color: white;")
         self.fecha_inicio = QtWidgets.QDateEdit()
         self.fecha_inicio.setCalendarPopup(True)
         self.fecha_inicio.setDate(QtCore.QDate.currentDate())
 
         self.fecha_cierre_label = QtWidgets.QLabel("📅 Fecha de cierre:")
+        self.fecha_cierre_label.setStyleSheet("color: white;")
         self.fecha_cierre = QtWidgets.QDateEdit()
         self.fecha_cierre.setCalendarPopup(True)
         self.fecha_cierre.setDate(QtCore.QDate.currentDate())
@@ -59,16 +58,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.generar_reporte_btn = QtWidgets.QPushButton("📊 Generar Reporte")
         self.cerrar_ventana_btn = QtWidgets.QPushButton("❌ Cerrar Ventana")
 
-        # Estilos de botones
         self.generar_reporte_btn.setStyleSheet("""
-            background-color: #009688;
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #0078D7, stop:1 #005A9E);
             color: white;
             padding: 10px;
             border-radius: 5px;
             font-size: 16px;
         """)
         self.cerrar_ventana_btn.setStyleSheet("""
-            background-color: #e74c3c;
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #e74c3c, stop:1 #c0392b);
             color: white;
             padding: 10px;
             border-radius: 5px;
@@ -91,18 +89,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.formulario_reporte.show()
 
     def generar_reporte(self):
-        """Guarda las fechas seleccionadas y muestra la página de reportes."""
         fechainicio = self.fecha_inicio.date().toString("dd/MM/yyyy")
         fechafin = self.fecha_cierre.date().toString("dd/MM/yyyy")
 
-        # Enviar fechas a Page3 para actualizar los datos
         self.page3.actualizar_fechas(fechainicio, fechafin)
-
-        self.stackedWidget.setCurrentIndex(2)  # Ir a la página de reportes
-        self.formulario_reporte.close()  # Cerrar el formulario
+        self.stackedWidget.setCurrentIndex(2)
+        self.formulario_reporte.close()
 
     def cerrar_ventana(self):
-        """Cerrar la ventana del formulario de fechas."""
         self.formulario_reporte.close()
 
 if __name__ == "__main__":
