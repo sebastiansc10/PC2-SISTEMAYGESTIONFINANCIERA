@@ -364,3 +364,11 @@ def actualizar_transaccion(glosa, fecha, id_cuenta, cantidad_actual, dh_actual, 
                 indent=4,
                 ensure_ascii=False
             )
+
+def truncar_diario():
+    """Trunca la tabla Diario, eliminando todos los registros."""
+    with obtener_conexion() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("TRUNCATE diario RESTART IDENTITY CASCADE;")
+            conn.commit()  # Confirmar los cambios
+    return json.dumps({"mensaje": "Tabla Diario truncada correctamente"})

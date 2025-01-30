@@ -10,60 +10,75 @@ from app.funciones.EstadoSituacion import (
     situacion_patrimonio
 )
 from app.funciones.EstadoResultados import calcular_estado_resultados, utilidadantes
-from app.funciones.DiarioTransaccion import diariotransaccion # Add mayorizartransacciones
+from app.funciones.DiarioTransaccion import diariotransaccion
 from app.funciones.Mayorizar_BalanceComprobación import mayorizartransacciones
 
 class Page3(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.parent_window = parent  # Guardamos la referencia al Ui_MainWindow
-        self.diario_tables = []  # To store references to diario tables
-        self.mayorizacion_tables = []  # To store references to mayorizacion tables
+        self.parent_window = parent
+        self.diario_tables = []
+        self.mayorizacion_tables = []
         self.setup_ui()
 
     def setup_ui(self):
         self.page3_layout = QVBoxLayout(self)
+        
+        # Set the background color of the entire page to black
+        self.setStyleSheet("background-color: #000000; color: #ffffff;")
 
-        # Título principal (fuera del área de desplazamiento)
+        # Update styles for title and subtitle
         self.titulo_principal = QtWidgets.QLabel("Registros contables")
         self.titulo_principal.setAlignment(QtCore.Qt.AlignCenter)
         self.titulo_principal.setStyleSheet("""
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 10px;
-        color: #2C3E50;
-    """)
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffffff;
+        """)
 
-        # Subtítulo con fechas (fuera del área de desplazamiento)
         self.subtitulo_fechas = QtWidgets.QLabel()
         self.subtitulo_fechas.setAlignment(QtCore.Qt.AlignCenter)
         self.subtitulo_fechas.setStyleSheet("""
-        font-size: 16px;
-        margin-bottom: 20px;
-        color: #34495E;
-    """)
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #ffffff;
+        """)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setStyleSheet("""
-        background-color: #ffffff;
-        border: 1px solid #ccc;
-        border-radius: 10px;
-    """)
+            QScrollArea {
+                background-color: #000000;
+                border: 1px solid #00CED1;
+                border-radius: 10px;
+            }
+            QScrollBar:vertical {
+                background-color: #000000;
+                width: 10px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #00CED1;
+                min-height: 20px;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        """)
 
         content_widget = QtWidgets.QWidget()
         content_layout = QVBoxLayout(content_widget)
 
-        # Estilos para los títulos dentro del área de desplazamiento
+        # Update styles for section titles
         titulo_style = """
-        font-size: 20px;
-        font-weight: bold;
-        margin-top: 20px;
-        margin-bottom: 10px;
-        color: #2980B9;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #00CED1;
         """
 
-        # Agregar los nuevos títulos y contenido de ejemplo
         titulos = [
             "Diarios y transacciones",
             "Mayorización",
@@ -78,105 +93,43 @@ class Page3(QtWidgets.QWidget):
             content_layout.addWidget(label_titulo)
 
             if titulo == "Diarios y transacciones":
-                # Create a container widget for diario tables
                 self.diario_container = QtWidgets.QWidget()
                 self.diario_layout = QVBoxLayout(self.diario_container)
-                self.diario_layout.setSpacing(20)  # Add spacing between tables
+                self.diario_layout.setSpacing(20)
                 content_layout.addWidget(self.diario_container)
             elif titulo == "Mayorización":
-                # Create a container widget for mayorizacion tables
                 self.mayorizacion_container = QtWidgets.QWidget()
                 self.mayorizacion_layout = QVBoxLayout(self.mayorizacion_container)
-                self.mayorizacion_layout.setSpacing(20)  # Add spacing between tables
+                self.mayorizacion_layout.setSpacing(20)
                 content_layout.addWidget(self.mayorizacion_container)
             elif titulo == "Balanza de comprobación":
-                # Crear la tabla de balance de comprobación
-                self.tabla_balance = QTableWidget()
-                self.tabla_balance.setColumnCount(4)
-                self.tabla_balance.setHorizontalHeaderLabels(["Código de cuenta", "Nombre de la cuenta", "Debe", "Haber"])
-                self.tabla_balance.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                self.tabla_balance.setStyleSheet("""
-                    QTableWidget {
-                        border: none;
-                    }
-                    QHeaderView::section {
-                        background-color: #f0f0f0;
-                        padding: 4px;
-                        border: 1px solid #d0d0d0;
-                        font-weight: bold;
-                    }
-                """)
+                self.tabla_balance = self.crear_tabla_generica(4, ["Código de cuenta", "Nombre de la cuenta", "Debe", "Haber"])
                 content_layout.addWidget(self.tabla_balance)
             elif titulo == "Estado de situación financiera":
-                # Crear las tablas lado a lado
                 tablas_layout = QHBoxLayout()
                 
-                # Columna izquierda
                 columna_izquierda = QVBoxLayout()
-                
-                # Tabla Activo corriente
-                self.tabla_activo_corriente = self.crear_tabla()
+                self.tabla_activo_corriente = self.crear_tabla_generica(2, ["Cuenta", "Saldo"])
+                self.tabla_activo_no_corriente = self.crear_tabla_generica(2, ["Cuenta", "Saldo"])
                 columna_izquierda.addWidget(self.tabla_activo_corriente)
-                
-                # Tabla Activo no corriente
-                self.tabla_activo_no_corriente = self.crear_tabla()
                 columna_izquierda.addWidget(self.tabla_activo_no_corriente)
-                
                 tablas_layout.addLayout(columna_izquierda)
                 
-                # Columna derecha
                 columna_derecha = QVBoxLayout()
-                
-                # Tabla Pasivos
-                self.tabla_pasivos = self.crear_tabla()
+                self.tabla_pasivos = self.crear_tabla_generica(2, ["Cuenta", "Saldo"])
+                self.tabla_patrimonio = self.crear_tabla_generica(2, ["Cuenta", "Saldo"])
                 columna_derecha.addWidget(self.tabla_pasivos)
-                
-                # Tabla Patrimonio
-                self.tabla_patrimonio = self.crear_tabla()
                 columna_derecha.addWidget(self.tabla_patrimonio)
-                
                 tablas_layout.addLayout(columna_derecha)
                 
                 content_layout.addLayout(tablas_layout)
                 
-                # Create the summary table
-                self.tabla_resumen = QTableWidget()
-                self.tabla_resumen.setColumnCount(4)
-                self.tabla_resumen.setRowCount(1)
-                self.tabla_resumen.setHorizontalHeaderLabels(["Activo total", "Valor", "Total pasivo + patrimonio", "Valor"])
-                self.tabla_resumen.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                self.tabla_resumen.setStyleSheet("""
-                    QTableWidget {
-                        border: none;
-                        background-color: #e6ffe6;
-                    }
-                    QHeaderView::section {
-                        background-color: #c2f0c2;
-                        padding: 4px;
-                        border: 1px solid #99e699;
-                        font-weight: bold;
-                    }
-                """)
+                self.tabla_resumen = self.crear_tabla_generica(4, ["Activo total", "Valor", "Total pasivo + patrimonio", "Valor"])
                 content_layout.addWidget(self.tabla_resumen)
             elif titulo == "Estado de resultados":
-                # Crear la tabla de estado de resultados
-                self.tabla_resultados = QTableWidget()
-                self.tabla_resultados.setColumnCount(2)
-                self.tabla_resultados.setHorizontalHeaderLabels(["", ""])
+                self.tabla_resultados = self.crear_tabla_generica(2, ["", ""])
                 self.tabla_resultados.horizontalHeader().setVisible(False)
-                self.tabla_resultados.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                self.tabla_resultados.setStyleSheet("""
-                    QTableWidget {
-                        border: none;
-                    }
-                """)
                 content_layout.addWidget(self.tabla_resultados)
-            else:
-                # Agregar contenido de ejemplo para otras secciones
-                for i in range(5):
-                    label = QtWidgets.QLabel(f"Registro de {titulo.lower()} {i + 1}")
-                    label.setStyleSheet("font-size: 16px; padding: 10px;")
-                    content_layout.addWidget(label)
 
         self.scroll_area.setWidget(content_widget)
 
@@ -184,11 +137,10 @@ class Page3(QtWidgets.QWidget):
         self.page3_layout.addWidget(self.subtitulo_fechas)
         self.page3_layout.addWidget(self.scroll_area)
 
-        # Botón para volver al inicio
         self.boton_volver_inicio = QPushButton("🔙 Volver al Inicio")
         self.boton_volver_inicio.setStyleSheet("""
-            background-color: #3498db;
-            color: white;
+            background-color: #00CED1;
+            color: #000000;
             padding: 10px;
             border-radius: 5px;
             font-size: 14px;
@@ -196,25 +148,58 @@ class Page3(QtWidgets.QWidget):
         """)
         self.boton_volver_inicio.clicked.connect(self.volver_al_inicio)
         
-        # Agregar el botón al layout de la página
         self.page3_layout.addWidget(self.boton_volver_inicio)
 
         self.setLayout(self.page3_layout)
 
+    def crear_tabla_generica(self, num_columnas, headers):
+        tabla = QTableWidget()
+        tabla.setColumnCount(num_columnas)
+        tabla.setHorizontalHeaderLabels(headers)
+        tabla.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        tabla.verticalHeader().setVisible(False)
+        tabla.setStyleSheet("""
+            QTableWidget {
+                background-color: #000000;
+                color: #ffffff;
+                border: 2px solid #00CED1;
+                border-radius: 4px;
+            }
+            QHeaderView::section {
+                background-color: #00CED1;
+                color: #000000;
+                padding: 6px;
+                border: 1px solid #00CED1;
+                font-weight: bold;
+            }
+            QTableWidget::item {
+                border-bottom: 1px solid #00CED1;
+            }
+        """)
+        tabla.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        return tabla
     def crear_tabla(self):
         tabla = QTableWidget()
         tabla.setColumnCount(2)
         tabla.setHorizontalHeaderLabels(["Cuenta", "Saldo"])
         tabla.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        tabla.verticalHeader().setVisible(False)
         tabla.setStyleSheet("""
             QTableWidget {
-                border: none;
+                background-color: #000000;
+                color: #000000;
+                border: 2px solid #00CED1;
+                border-radius: 4px;
             }
             QHeaderView::section {
-                background-color: #f0f0f0;
-                padding: 4px;
-                border: 1px solid #d0d0d0;
+                background-color: #00CED1;
+                color: #000000;
+                padding: 6px;
+                border: 1px solid #00CED1;
                 font-weight: bold;
+            }
+            QTableWidget::item {
+                border-bottom: 1px solid #00CED1;
             }
         """)
         return tabla
@@ -599,17 +584,25 @@ class Page3(QtWidgets.QWidget):
             "Debe",
             "Haber"
         ])
+        # Remove row numbers
+        tabla.verticalHeader().setVisible(False)
         tabla.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         tabla.setStyleSheet("""
             QTableWidget {
-                border: 1px solid #d0d0d0;
+                background-color: #000000;
+                color: #000000;
+                border: 2px solid #00CED1;
                 border-radius: 4px;
             }
             QHeaderView::section {
-                background-color: #f0f0f0;
-                padding: 4px;
-                border: 1px solid #d0d0d0;
+                background-color: #00CED1;
+                color: #000000;
+                padding: 6px;
+                border: 1px solid #00CED1;
                 font-weight: bold;
+            }
+            QTableWidget::item {
+                border-bottom: 1px solid #00CED1;
             }
         """)
         tabla.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -673,7 +666,6 @@ class Page3(QtWidgets.QWidget):
             self.diario_tables.append(tabla)
 
 
-
     def crear_tabla_mayorizacion(self, id_cuenta, nombre_cuenta):
         """Create a new table for mayorizacion entries"""
         tabla = QTableWidget()
@@ -684,26 +676,35 @@ class Page3(QtWidgets.QWidget):
             "Haber"
         ])
         
-        # Set the table title
+        # Set the table title with updated style
         title_label = QtWidgets.QLabel(f"{id_cuenta} - {nombre_cuenta}")
         title_label.setStyleSheet("""
+            color: #00CED1;
             font-weight: bold;
             font-size: 14px;
             padding: 5px;
         """)
         self.mayorizacion_layout.addWidget(title_label)
         
+        # Remove row numbers
+        tabla.verticalHeader().setVisible(False)
         tabla.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         tabla.setStyleSheet("""
             QTableWidget {
-                border: 1px solid #d0d0d0;
+                background-color: #000000;
+                color: #000000;
+                border: 2px solid #00CED1;
                 border-radius: 4px;
             }
             QHeaderView::section {
-                background-color: #f0f0f0;
-                padding: 4px;
-                border: 1px solid #d0d0d0;
+                background-color: #00CED1;
+                color: #000000;
+                padding: 6px;
+                border: 1px solid #00CED1;
                 font-weight: bold;
+            }
+            QTableWidget::item {
+                border-bottom: 1px solid #00CED1;
             }
         """)
         tabla.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
