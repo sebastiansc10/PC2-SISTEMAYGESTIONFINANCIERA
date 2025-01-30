@@ -127,7 +127,7 @@ class Page3(QtWidgets.QWidget):
                 self.tabla_resumen = self.crear_tabla_generica(4, ["Activo total", "Valor", "Total pasivo + patrimonio", "Valor"])
                 content_layout.addWidget(self.tabla_resumen)
             elif titulo == "Estado de resultados":
-                self.tabla_resultados = self.crear_tabla_generica(2, ["", ""])
+                self.tabla_resultados = self.crear_tabla_generica(3, ["Cuenta", "Monto", "Porcentaje del total"])
                 self.tabla_resultados.horizontalHeader().setVisible(False)
                 content_layout.addWidget(self.tabla_resultados)
 
@@ -297,12 +297,15 @@ class Page3(QtWidgets.QWidget):
         # Filtrar filas en blanco
         datos_tabla = [fila for fila in datos_tabla if fila[1] != "" and fila[1] != 0]
 
+        # Obtener el monto de "Ventas" como referencia para el 100%
+        monto_ventas = next((monto for nombre, monto in datos_tabla if nombre == "Ventas"), 0)
+
         # Configurar la tabla
         self.tabla_resultados.setRowCount(len(datos_tabla))
 
         # Llenar la tabla con los datos
         for row, (nombre, valor) in enumerate(datos_tabla):
-            self.agregar_fila_resultados(row, nombre, valor)
+            self.agregar_fila_resultados(row, nombre, valor, monto_ventas)
 
         # Colorear filas específicas
         self.colorear_fila("Utilidad bruta", QColor(255, 255, 200))
@@ -525,17 +528,28 @@ class Page3(QtWidgets.QWidget):
             total_height += self.tabla_patrimonio.rowHeight(i)
         self.tabla_patrimonio.setFixedHeight(total_height)
 
-    def agregar_fila_resultados(self, row, nombre, valor):
+    def agregar_fila_resultados(self, row, nombre, valor, monto_ventas):
+        # Columna 1: Nombre de la cuenta
         item_nombre = QTableWidgetItem(nombre)
         item_nombre.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.tabla_resultados.setItem(row, 0, item_nombre)
 
+        # Columna 2: Monto
         if isinstance(valor, (int, float)):
             item_valor = QTableWidgetItem(f"{valor:.2f}")
         else:
             item_valor = QTableWidgetItem(str(valor))
         item_valor.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.tabla_resultados.setItem(row, 1, item_valor)
+
+        # Columna 3: Porcentaje del total
+        if monto_ventas != 0:  # Evitar división por cero
+            porcentaje = (valor / monto_ventas) * 100
+        else:
+            porcentaje = 0
+        item_porcentaje = QTableWidgetItem(f"{porcentaje:.2f}%")
+        item_porcentaje.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.tabla_resultados.setItem(row, 2, item_porcentaje)
 
     def colorear_fila(self, nombre_fila, color):
         for row in range(self.tabla_resultados.rowCount()):
