@@ -544,37 +544,42 @@ class Page3(QtWidgets.QWidget):
                     self.tabla_resultados.item(row, col).setBackground(QBrush(color))
                 break
 
+
     def actualizar_tabla_resumen(self, fecha_inicio, fecha_fin):
-        # Obtain the necessary totals
+        # Obtener los totales necesarios
         total_activo_corriente = json.loads(situacion_totalactivocorriente(fecha_inicio, fecha_fin))['Total_Saldo']
         total_activo_no_corriente = json.loads(situacion_totalactivonocorriente(fecha_inicio, fecha_fin))['Total_Saldo']
         total_pasivo = json.loads(situacion_totalpasivo(fecha_inicio, fecha_fin))['Total_Saldo']
-    
-        # Calculate the total equity (including accumulated earnings)
+        
+        # Calcular el patrimonio total (incluyendo utilidades acumuladas)
         patrimonio_data = json.loads(situacion_patrimonio(fecha_inicio, fecha_fin))
         utilidad_acumulada = json.loads(utilidadantes(fecha_inicio, fecha_fin))['utilidad_antes_impuestos']
         total_patrimonio = sum(item['saldo'] for item in patrimonio_data) + utilidad_acumulada
 
-        # Calculate the totals
+        # Calcular los totales
         activo_total = total_activo_corriente + total_activo_no_corriente
         pasivo_patrimonio_total = total_pasivo + total_patrimonio
 
-        # Fill the table with data
+        # Configurar la tabla con una fila
+        self.tabla_resumen.setRowCount(1)  # Asegurar que la tabla tenga al menos una fila
+
+        # Llenar la tabla con los datos
         self.tabla_resumen.setItem(0, 0, QTableWidgetItem("Activo total"))
         self.tabla_resumen.setItem(0, 1, QTableWidgetItem(f"{activo_total:.2f}"))
         self.tabla_resumen.setItem(0, 2, QTableWidgetItem("Total pasivo + patrimonio"))
         self.tabla_resumen.setItem(0, 3, QTableWidgetItem(f"{pasivo_patrimonio_total:.2f}"))
 
-        # Adjust the size of rows and columns
+        # Ajustar el tamaño de las filas y columnas
         self.tabla_resumen.resizeColumnsToContents()
         self.tabla_resumen.resizeRowsToContents()
 
-        # Disable table editing
+        # Deshabilitar la edición de la tabla
         self.tabla_resumen.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
-        # Calculate and set the total height of the table
+        # Calcular y establecer la altura total de la tabla
         total_height = self.tabla_resumen.horizontalHeader().height() + self.tabla_resumen.rowHeight(0)
         self.tabla_resumen.setFixedHeight(total_height)
+
 
     def crear_tabla_diario(self):
         """Create a new table for diario entries"""
