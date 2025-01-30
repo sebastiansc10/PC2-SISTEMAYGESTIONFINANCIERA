@@ -425,7 +425,6 @@ class Page2(QtWidgets.QWidget):
             
             QMessageBox.information(self, "Éxito", "El archivo CSV ha sido guardado correctamente.")
 
-
     def actualizar_estado_boton(self):
         if self.tableWidget.currentRow() >= 0:
             self.btn_view_transaction.setEnabled(True)
@@ -513,7 +512,6 @@ class Page2(QtWidgets.QWidget):
         else:
             QMessageBox.information(self, "Sin cambios", "No se han detectado modificaciones en los diarios.")
 
-
     def limpiar_diarios(self):
         """Limpia todos los registros de la tabla Diario y actualiza la interfaz."""
         confirmacion = QMessageBox.question(
@@ -534,7 +532,6 @@ class Page2(QtWidgets.QWidget):
                     QMessageBox.warning(self, "Error", "No se pudo limpiar la tabla.")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Se produjo un error al limpiar la tabla: {str(e)}")
-
 
     def volver_al_inicio(self):
         if self.main_window:

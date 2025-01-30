@@ -107,8 +107,10 @@ class Page4(QtWidgets.QWidget):
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setHorizontalHeaderLabels(["Código de cuenta", "Nombre de cuenta", "Debe", "Haber"])
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tableWidget.verticalHeader().setVisible(False)  # 🔹 Oculta los índices de fila
         self.tableWidget.setAlternatingRowColors(True)
         self.tableWidget.setStyleSheet("""
+            /* 🔹 Fondo General de la Tabla */
             QTableWidget {
                 background-color: #121212;
                 gridline-color: #444;
@@ -116,21 +118,98 @@ class Page4(QtWidgets.QWidget):
                 font-size: 16px;
                 font-weight: bold;
             }
-            QHeaderView::section {
-                background-color: #0078D7;
-                color: white;
-                padding: 8px;
-                font-size: 16px;
-                font-weight: bold;
-                border: 1px solid #444;
-            }
+
+            /* 🔹 Ítems de la Tabla */
             QTableWidget::item {
                 background-color: #1a1a1a;
                 color: white;
+                padding: 6px;
+                border: none;  /* 🔹 Elimina el borde */
             }
+
+
+            /* 🔹 Cabeceras */
+            QHeaderView::section {
+                background-color: #0078D7;
+                color: white;
+                padding: 10px;  
+                font-size: 16px;
+                font-weight: bold;
+                border: 1px solid #444;
+                border-radius: 6px;  /* 🔹 Bordes redondeados */
+            }
+
+            /* 🔹 Selección de Items */
             QTableWidget::item:selected {
                 background-color: #005A9E;
                 color: white;
+                border: 2px solid white;
+                border-radius: 6px;  /* 🔹 Hace la selección más elegante */
+            }
+
+            /* 🔹 Estilo para el Scrollbar */
+            QScrollBar:vertical {
+                border: none;
+                background: #1a1a1a;
+                width: 12px; /* 🔹 Hace el scrollbar más delgado */
+                margin: 2px 2px 2px 2px;
+                border-radius: 6px;
+            }
+
+            /* 🔹 Parte del Scrollbar que se mueve */
+            QScrollBar::handle:vertical {
+                background: #444;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            
+            /* 🔹 Cuando el cursor pasa sobre el Scroll */
+            QScrollBar::handle:vertical:hover {
+                background: #0078D7;
+            }
+            
+            /* 🔹 Cuando se hace clic en el Scroll */
+            QScrollBar::handle:vertical:pressed {
+                background: #005A9E;
+            }
+
+            /* 🔹 Flechas del Scroll */
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                background: none;
+                width: 0px;
+                height: 0px;
+            }
+
+            /* 🔹 Espacio entre scrollbar y bordes */
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
+
+            /* 🔹 QDateEdit para que combine mejor */
+            QDateEdit {
+                background-color: #1a1a1a;
+                color: white;
+                font-weight: bold;
+                border: none;
+                padding: 6px 0px; /* 🔹 Ajuste vertical */
+                font-size: 16px;
+                text-align: center;
+            }
+            QDateEdit::drop-down {
+                width: 20px;
+                subcontrol-origin: padding;
+                subcontrol-position: right center;
+            }
+
+            QDateEdit:hover {
+                background-color: #2a2a2a;
+                border: 1px solid #0078D7;
+            }
+
+            QDateEdit:focus {
+                background-color: #005A9E;
+                color: white;
+                border: 2px solid #FFF;
             }
         """)
         
@@ -199,67 +278,68 @@ class Page4(QtWidgets.QWidget):
                 id_cuenta = dialogo.cuenta_combo.currentData()
                 dh = dialogo.dh_combo.currentText()
                 cantidad = float(dialogo.cantidad_input.text())
-                
+
+                # 🔹 Verificar si el código de cuenta ya existe en la tabla
+                for row in range(self.tableWidget.rowCount()):
+                    if self.tableWidget.item(row, 0).text() == str(id_cuenta):
+                        QMessageBox.warning(self, "Error", "⚠️ El código de cuenta ya existe en la tabla.")
+                        return  # 🔹 Detener el proceso de guardado
+
                 # Registrar la transacción
                 if registrar_nueva_transaccion(id_cuenta, dh, cantidad, self.glosa, self.fecha):
-                    QMessageBox.information(self, "Éxito", "Transacción registrada correctamente")
-                    self.obtener_transacciones()  # Actualizar la tabla
+                    QMessageBox.information(self, "Éxito", "✅ Transacción registrada correctamente")
+                    self.obtener_transacciones()  # 🔄 Actualizar la tabla
                 else:
-                    QMessageBox.warning(self, "Error", "No se pudo registrar la transacción")
+                    QMessageBox.warning(self, "Error", "❌ No se pudo registrar la transacción")
             except ValueError:
-                QMessageBox.warning(self, "Error", "Por favor ingrese una cantidad válida")
+                QMessageBox.warning(self, "Error", "⚠️ Por favor ingrese una cantidad válida")
 
     def mostrar_dialogo_actualizar_transaccion(self):
         """Muestra el diálogo para actualizar una transacción existente."""
         selected_items = self.tableWidget.selectedItems()
         if not selected_items:
-            QMessageBox.warning(self, "Error", "Por favor, seleccione una transacción para actualizar.")
+            QMessageBox.warning(self, "Error", "⚠️ Por favor, seleccione una transacción para actualizar.")
             return
 
         row = selected_items[0].row()
-        id_cuenta = self.tableWidget.item(row, 0).text()
-        cuenta = self.tableWidget.item(row, 1).text()
-        
-        cantidad = 0
-        tipo = ''
-        for col in range(2, 4):
-            valor = self.tableWidget.item(row, col).text()
-            if valor != '0':
-                cantidad = float(valor)
-                tipo = 'Debe' if col == 2 else 'Haber'
-                break
+        id_cuenta_actual = self.tableWidget.item(row, 0).text()
 
         transaccion_actual = {
-            'id_cuenta': id_cuenta,
-            'cuenta': cuenta,
-            'tipo': tipo,
-            'cantidad': cantidad
+            'id_cuenta': id_cuenta_actual,
+            'cuenta': self.tableWidget.item(row, 1).text(),
+            'tipo': "Debe" if self.tableWidget.item(row, 2).text() != "0" else "Haber",
+            'cantidad': float(self.tableWidget.item(row, 2).text() or self.tableWidget.item(row, 3).text())
         }
 
         dialogo = TransaccionDialog(self, transaccion_actual)
         if dialogo.exec_() == QDialog.Accepted:
             try:
-                # Obtener nuevos datos del diálogo
                 nueva_cuenta = dialogo.cuenta_combo.currentData()
+
+                # 🔹 Validar si la nueva cuenta ya existe en otra fila (excepto en la actual)
+                for r in range(self.tableWidget.rowCount()):
+                    if r != row and self.tableWidget.item(r, 0).text() == str(nueva_cuenta):
+                        QMessageBox.warning(self, "Error", "⚠️ No se pueden duplicar códigos de cuenta en la tabla.")
+                        return  # 🔹 Detener el proceso de actualización
+
                 nuevo_dh = dialogo.dh_combo.currentText()
                 nueva_cantidad = float(dialogo.cantidad_input.text())
-                
-                # Actualizar la transacción
+
                 resultado = json.loads(actualizar_transaccion(
-                    self.glosa, 
-                    self.fecha, 
-                    transaccion_actual['id_cuenta'], 
-                    transaccion_actual['cantidad'], 
-                    'Debe' if transaccion_actual['tipo'] == 'Debe' else 'Haber',
+                    self.glosa,
+                    self.fecha,
+                    transaccion_actual['id_cuenta'],
+                    transaccion_actual['cantidad'],
+                    transaccion_actual['tipo'],
                     nueva_cantidad,
-                    'Debe' if nuevo_dh == 'Debe' else 'Haber',
+                    nuevo_dh,
                     nueva_cuenta
                 ))
-                
+
                 QMessageBox.information(self, "Resultado", resultado["mensaje"])
-                self.obtener_transacciones()  # Actualizar la tabla
+                self.obtener_transacciones()  # 🔄 Refrescar la tabla
             except ValueError:
-                QMessageBox.warning(self, "Error", "Por favor ingrese una cantidad válida")
+                QMessageBox.warning(self, "Error", "⚠️ Por favor ingrese una cantidad válida")
 
     def borrar_transaccion_seleccionada(self):
         """Borra la transacción seleccionada en la tabla."""
@@ -296,6 +376,7 @@ class Page4(QtWidgets.QWidget):
         self.tableWidget.setRowCount(len(resultado))
         
         for row, transaccion in enumerate(resultado):
+            self.tableWidget.setRowHeight(row, 50)  # 🔹 Ajusta la altura de cada fila a 50px
             self.tableWidget.setItem(row, 0, QTableWidgetItem(str(transaccion["id_cuenta"])))
             self.tableWidget.setItem(row, 1, QTableWidgetItem(transaccion["cuenta"]))
             
@@ -311,11 +392,3 @@ class Page4(QtWidgets.QWidget):
 
     def volver_al_inicio(self):
         self.main_window.stackedWidget.setCurrentIndex(0)
-
-# Asegúrate de que las siguientes funciones estén definidas en el archivo correspondiente:
-# obtener_conexion()
-# decimal_default()
-# registrar_nueva_transaccion()
-# eliminar_transaccion()
-# actualizar_transaccion()
-
