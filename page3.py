@@ -248,7 +248,7 @@ class Page3(QtWidgets.QWidget):
         haber_item = QTableWidgetItem(f"{total_haber_valor:.2f}")
 
         # Establecer el color de fondo para las celdas de total
-        #color_total = QColor(255, 255, 200)  # Amarillo claro
+        #color_total = QColor(255, 255, 0)  # Amarillo claro
         #debe_item.setBackground(QBrush(color_total))
         #haber_item.setBackground(QBrush(color_total))
 
@@ -256,7 +256,7 @@ class Page3(QtWidgets.QWidget):
         for col in range(2):
             item = self.tabla_balance.item(last_row, col)
             if item:
-                item.setBackground(QBrush(QColor(255, 255, 200)))  # Fondo amarillo claro
+                item.setBackground(QBrush(QColor(255, 255, 0)))  # Fondo amarillo claro
                 item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
 
         self.tabla_balance.setItem(last_row, 2, debe_item)
@@ -315,9 +315,9 @@ class Page3(QtWidgets.QWidget):
             self.agregar_fila_resultados(row, nombre, valor, monto_ventas)
 
         # Colorear filas específicas
-        self.colorear_fila("Utilidad bruta", QColor(255, 255, 200))
-        self.colorear_fila("Utilidad operativa", QColor(255, 255, 200))
-        self.colorear_fila("Utilidad antes de impuestos", QColor(255, 200, 100))
+        self.colorear_fila("Utilidad bruta", QColor(255, 255, 0))
+        self.colorear_fila("Utilidad operativa", QColor(255, 255, 0))
+        self.colorear_fila("Utilidad antes de impuestos", QColor(255, 165, 0))
 
         # Ajustar el tamaño de las filas y columnas
         self.tabla_resultados.resizeColumnsToContents()
@@ -366,7 +366,7 @@ class Page3(QtWidgets.QWidget):
         for col in range(2):
             item = self.tabla_activo_corriente.item(last_row, col)
             if item:
-                item.setBackground(QBrush(QColor(255, 255, 200)))  # Fondo amarillo claro
+                item.setBackground(QBrush(QColor(255, 255, 0)))  # Fondo amarillo claro
                 item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
         
         # Ajustar el tamaño de las filas y columnas
@@ -416,7 +416,7 @@ class Page3(QtWidgets.QWidget):
         for col in range(2):
             item = self.tabla_activo_no_corriente.item(last_row, col)
             if item:
-                item.setBackground(QBrush(QColor(255, 255, 200)))  # Fondo amarillo claro
+                item.setBackground(QBrush(QColor(255, 255, 0)))  # Fondo amarillo claro
                 item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
         
         # Ajustar el tamaño de las filas y columnas
@@ -466,7 +466,7 @@ class Page3(QtWidgets.QWidget):
         for col in range(2):
             item = self.tabla_pasivos.item(last_row, col)
             if item:
-                item.setBackground(QBrush(QColor(255, 255, 200)))  # Fondo amarillo claro
+                item.setBackground(QBrush(QColor(255, 255, 0)))  # Fondo amarillo claro
                 item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
         
         # Ajustar el tamaño de las filas y columnas
@@ -519,7 +519,7 @@ class Page3(QtWidgets.QWidget):
         for col in range(2):
             item = self.tabla_patrimonio.item(row, col)
             if item:
-                item.setBackground(QBrush(QColor(255, 200, 100)))  # Fondo naranja
+                item.setBackground(QBrush(QColor(255, 165, 0)))  # Fondo naranja
                 item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
         
         total_patrimonio += utilidad_acumulada
@@ -533,7 +533,7 @@ class Page3(QtWidgets.QWidget):
         for col in range(2):
             item = self.tabla_patrimonio.item(row, col)
             if item:
-                item.setBackground(QBrush(QColor(255, 255, 200)))  # Fondo amarillo claro
+                item.setBackground(QBrush(QColor(255, 255, 0)))  # Fondo amarillo claro
                 item.setForeground(QBrush(QColor(0, 0, 0)))  # Texto en negro
         
         # Ajustar el tamaño de las filas y columnas
