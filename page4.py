@@ -54,6 +54,37 @@ class TransaccionDialog(QDialog):
             self.dh_combo.setCurrentText(self.transaccion['tipo'])
             self.cantidad_input.setText(str(self.transaccion['cantidad']))
 
+        # Aplicar estilos
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #121212;
+                color: white;
+            }
+            QLabel {
+                color: white;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QComboBox, QLineEdit {
+                background-color: #1a1a1a;
+                color: white;
+                border: 1px solid #444;
+                padding: 5px;
+                border-radius: 5px;
+            }
+            QPushButton {
+                background-color: #0078D7;
+                color: white;
+                padding: 8px;
+                border-radius: 5px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #005A9E;
+            }
+        """)
+
 class Page4(QtWidgets.QWidget):
     def __init__(self, main_window, glosa, fecha, parent=None):
         super().__init__(parent)
@@ -69,7 +100,7 @@ class Page4(QtWidgets.QWidget):
         # Título
         self.label = QtWidgets.QLabel(f"📜 Transacciones del Diario: {self.glosa}")
         self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("font-size: 18px; font-weight: bold; margin-bottom: 10px;")
+        self.label.setStyleSheet("font-size: 22px; font-weight: bold; color: #f1c40f; margin-bottom: 10px;")
         
         # Tabla
         self.tableWidget = QTableWidget()
@@ -79,47 +110,38 @@ class Page4(QtWidgets.QWidget):
         self.tableWidget.setAlternatingRowColors(True)
         self.tableWidget.setStyleSheet("""
             QTableWidget {
-                background-color: white;
-                gridline-color: #ccc;
+                background-color: #121212;
+                gridline-color: #444;
+                color: white;
+                font-size: 16px;
+                font-weight: bold;
             }
             QHeaderView::section {
-                background-color: #1976D2;
+                background-color: #0078D7;
                 color: white;
-                padding: 5px;
-                font-size: 14px;
+                padding: 8px;
+                font-size: 16px;
                 font-weight: bold;
-                border: 1px solid #ccc;
+                border: 1px solid #444;
+            }
+            QTableWidget::item {
+                background-color: #1a1a1a;
+                color: white;
             }
             QTableWidget::item:selected {
-                background-color: #90CAF9;
-                color: black;
+                background-color: #005A9E;
+                color: white;
             }
         """)
         
         # Botones
         btn_layout = QHBoxLayout()
         
-        self.btn_nueva_transaccion = QPushButton("➕ Nueva Transacción")
-        self.btn_actualizar_transaccion = QPushButton("🔄 Actualizar Transacción")
-        self.btn_borrar_transaccion = QPushButton("🗑️ Borrar Transacción")
-        self.btn_back_diarios = QPushButton("🔙 Volver a Diarios")
-        self.btn_back_home = QPushButton("🏠 Volver al Inicio")
-        
-        self.btn_nueva_transaccion.setStyleSheet(
-            "background-color: #4CAF50; color: white; padding: 8px; border-radius: 5px;"
-        )
-        self.btn_actualizar_transaccion.setStyleSheet(
-            "background-color: #FFA500; color: white; padding: 8px; border-radius: 5px;"
-        )
-        self.btn_borrar_transaccion.setStyleSheet(
-            "background-color: #F44336; color: white; padding: 8px; border-radius: 5px;"
-        )
-        self.btn_back_diarios.setStyleSheet(
-            "background-color: #34495E; color: white; padding: 8px; border-radius: 5px;"
-        )
-        self.btn_back_home.setStyleSheet(
-            "background-color: #2C3E50; color: white; padding: 8px; border-radius: 5px;"
-        )
+        self.btn_nueva_transaccion = self.create_button("➕ Nueva Transacción", "#4CAF50", "#45a049")
+        self.btn_actualizar_transaccion = self.create_button("🔄 Actualizar Transacción", "#FFA500", "#cc8400")
+        self.btn_borrar_transaccion = self.create_button("🗑️ Borrar Transacción", "#F44336", "#d32f2f")
+        self.btn_back_diarios = self.create_button("🔙 Volver a Diarios", "#34495E", "#2c3e50")
+        self.btn_back_home = self.create_button("🏠 Volver al Inicio", "#2C3E50", "#1a252f")
         
         # Conectar señales
         self.btn_nueva_transaccion.clicked.connect(self.mostrar_dialogo_nueva_transaccion)
@@ -140,6 +162,33 @@ class Page4(QtWidgets.QWidget):
         self.page4_layout.addLayout(btn_layout)
         
         self.setLayout(self.page4_layout)
+
+    def create_button(self, text, color, hover_color):
+        button = QPushButton(text)
+        button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {color};
+                color: white;
+                padding: 18px 30px;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: bold;
+                border: 2px solid #444;
+            }}
+            QPushButton:hover {{
+                background-color: {hover_color};
+                border: 2px solid white;
+            }}
+            QPushButton:pressed {{
+                background-color: #00000044;
+                border: 2px solid #fff;
+            }}
+        """)
+        button.setCursor(QtCore.Qt.PointingHandCursor)
+        button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        button.setMinimumHeight(60)
+        button.setFixedHeight(60)
+        return button
 
     def mostrar_dialogo_nueva_transaccion(self):
         """Muestra el diálogo para agregar una nueva transacción."""
