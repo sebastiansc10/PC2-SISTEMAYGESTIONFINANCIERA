@@ -161,23 +161,25 @@ class Page3(QtWidgets.QWidget):
         tabla.setStyleSheet("""
             QTableWidget {
                 background-color: #000000;
-                color: #ffffff;
+                color: #ffffff;  /* Color de la fuente en blanco */
                 border: 2px solid #00CED1;
                 border-radius: 4px;
             }
             QHeaderView::section {
                 background-color: #00CED1;
-                color: #000000;
+                color: #000000;  /* Color de la fuente del encabezado en negro */
                 padding: 6px;
                 border: 1px solid #00CED1;
                 font-weight: bold;
             }
             QTableWidget::item {
                 border-bottom: 1px solid #00CED1;
+                color: #ffffff;  /* Color de la fuente en blanco */
             }
         """)
         tabla.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         return tabla
+
     def crear_tabla(self):
         tabla = QTableWidget()
         tabla.setColumnCount(2)
@@ -590,23 +592,25 @@ class Page3(QtWidgets.QWidget):
         tabla.setStyleSheet("""
             QTableWidget {
                 background-color: #000000;
-                color: #000000;
+                color: #ffffff;  /* Color de la fuente en blanco */
                 border: 2px solid #00CED1;
                 border-radius: 4px;
             }
             QHeaderView::section {
                 background-color: #00CED1;
-                color: #000000;
+                color: #000000;  /* Color de la fuente del encabezado en negro */
                 padding: 6px;
                 border: 1px solid #00CED1;
                 font-weight: bold;
             }
             QTableWidget::item {
                 border-bottom: 1px solid #00CED1;
+                color: #ffffff;  /* Color de la fuente en blanco */
             }
         """)
         tabla.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         return tabla
+
 
     def actualizar_diarios(self, fecha_inicio, fecha_fin):
         """Actualiza las tablas de diario eliminando duplicaciones antes de insertar nuevos datos."""
@@ -656,7 +660,7 @@ class Page3(QtWidgets.QWidget):
 
             # Agregar la glosa
             glosa_label = QtWidgets.QLabel(f"Glosa: {diario['glosa']}")
-            glosa_label.setStyleSheet("font-style: italic; padding: 5px; color: #666;")
+            glosa_label.setStyleSheet("font-style: italic; padding: 5px; color: #ffffff;")
             self.diario_layout.addWidget(glosa_label)
 
             # Agregar un espacio entre registros
@@ -664,7 +668,6 @@ class Page3(QtWidgets.QWidget):
 
             # Guardar referencia a la tabla
             self.diario_tables.append(tabla)
-
 
     def crear_tabla_mayorizacion(self, id_cuenta, nombre_cuenta):
         """Create a new table for mayorizacion entries"""
@@ -692,23 +695,25 @@ class Page3(QtWidgets.QWidget):
         tabla.setStyleSheet("""
             QTableWidget {
                 background-color: #000000;
-                color: #000000;
+                color: #ffffff;  /* Color de la fuente en blanco */
                 border: 2px solid #00CED1;
                 border-radius: 4px;
             }
             QHeaderView::section {
                 background-color: #00CED1;
-                color: #000000;
+                color: #000000;  /* Color de la fuente del encabezado en negro */
                 padding: 6px;
                 border: 1px solid #00CED1;
                 font-weight: bold;
             }
             QTableWidget::item {
                 border-bottom: 1px solid #00CED1;
+                color: #ffffff;  /* Color de la fuente en blanco */
             }
         """)
         tabla.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         return tabla
+
 
     def actualizar_mayorizacion(self, fecha_inicio, fecha_fin):
         """Actualiza las tablas de mayorización eliminando duplicaciones antes de insertar nuevos datos."""
