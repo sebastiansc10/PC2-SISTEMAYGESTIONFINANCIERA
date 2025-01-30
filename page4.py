@@ -15,76 +15,134 @@ class TransaccionDialog(QDialog):
         
     def setup_ui(self):
         layout = QFormLayout(self)
-        
-        # Combobox para las cuentas
+
+        # 🔹 Combobox para las cuentas
         self.cuenta_combo = QComboBox()
+        self.cuenta_combo.setMinimumHeight(40)  # 🔹 Mayor altura para mejor legibilidad
         self.cuentas = obtener_cuentas()
         for id_cuenta, nombre in self.cuentas.items():
             self.cuenta_combo.addItem(f"{id_cuenta} - {nombre}", id_cuenta)
-        
-        # Combobox para Debe/Haber
+
+        # 🔹 Combobox para Debe/Haber
         self.dh_combo = QComboBox()
+        self.dh_combo.setMinimumHeight(40)
         self.dh_combo.addItems(["Debe", "Haber"])
-        
-        # Campo para la cantidad
+
+        # 🔹 Campo para la cantidad
         self.cantidad_input = QLineEdit()
         self.cantidad_input.setPlaceholderText("0.00")
-        
-        # Agregar widgets al layout
-        layout.addRow("Cuenta:", self.cuenta_combo)
-        layout.addRow("Tipo:", self.dh_combo)
-        layout.addRow("Cantidad:", self.cantidad_input)
-        
-        # Botones
+        self.cantidad_input.setMinimumHeight(40)
+        self.cantidad_input.setAlignment(QtCore.Qt.AlignRight)  # 🔹 Alineación a la derecha
+
+        # 🔹 Agregar widgets al layout con iconos descriptivos
+        layout.addRow("📌 <b>Cuenta:</b>", self.cuenta_combo)
+        layout.addRow("💰 <b>Tipo:</b>", self.dh_combo)
+        layout.addRow("📊 <b>Cantidad:</b>", self.cantidad_input)
+
+        # 🔹 Botones de acción
         buttons = QHBoxLayout()
-        self.btn_aceptar = QPushButton("Guardar")
-        self.btn_cancelar = QPushButton("Cancelar")
+        self.btn_aceptar = QPushButton("💾 Guardar")
+        self.btn_cancelar = QPushButton("❌ Cancelar")
+
+        # 🔹 Aplicar estilo a los botones
+        button_style = """
+            QPushButton {
+                background: #0078D7;
+                color: white;
+                padding: 16px;
+                border-radius: 8px;
+                font-size: 18px;
+                font-weight: bold;
+                border: 2px solid #444;
+                min-width: 160px;
+            }
+            QPushButton:hover {
+                background-color: #005A9E;
+                border: 2px solid white;
+            }
+            QPushButton:pressed {
+                background-color: #004080;
+                border: 2px solid #ffffff;
+            }
+        """
+        self.btn_aceptar.setStyleSheet(button_style)
+
+        cancel_button_style = """
+            QPushButton {
+                background: #e74c3c;
+                color: white;
+                padding: 16px;
+                border-radius: 8px;
+                font-size: 18px;
+                font-weight: bold;
+                border: 2px solid #444;
+                min-width: 160px;
+            }
+            QPushButton:hover {
+                background-color: #c0392b;
+                border: 2px solid white;
+            }
+            QPushButton:pressed {
+                background-color: #a93226;
+                border: 2px solid #ffffff;
+            }
+        """
+        self.btn_cancelar.setStyleSheet(cancel_button_style)
+
+        # 🔹 Añadir los botones al layout
         buttons.addWidget(self.btn_aceptar)
         buttons.addWidget(self.btn_cancelar)
-        
+
         self.btn_aceptar.clicked.connect(self.accept)
         self.btn_cancelar.clicked.connect(self.reject)
-        
+
         layout.addRow("", buttons)
 
-        # Si es una actualización, llenar los campos con los datos actuales
+        # 🔹 Si es una actualización, llenar los campos con los datos actuales
         if self.transaccion:
             index = self.cuenta_combo.findData(self.transaccion['id_cuenta'])
             self.cuenta_combo.setCurrentIndex(index)
             self.dh_combo.setCurrentText(self.transaccion['tipo'])
             self.cantidad_input.setText(str(self.transaccion['cantidad']))
 
-        # Aplicar estilos
+        # 🔹 Aplicar estilo general a la ventana
         self.setStyleSheet("""
             QDialog {
                 background-color: #121212;
                 color: white;
+                border-radius: 12px;
+                padding: 10px;
             }
             QLabel {
                 color: white;
-                font-size: 16px;
+                font-size: 18px;
                 font-weight: bold;
             }
             QComboBox, QLineEdit {
                 background-color: #1a1a1a;
                 color: white;
                 border: 1px solid #444;
-                padding: 5px;
-                border-radius: 5px;
+                padding: 10px;
+                border-radius: 6px;
+                font-size: 18px;
             }
-            QPushButton {
-                background-color: #0078D7;
-                color: white;
-                padding: 8px;
-                border-radius: 5px;
-                font-size: 16px;
-                font-weight: bold;
+            QComboBox::drop-down {
+                width: 20px;
+                subcontrol-origin: padding;
+                subcontrol-position: right center;
             }
-            QPushButton:hover {
-                background-color: #005A9E;
+            QComboBox:hover, QLineEdit:hover {
+                border: 1px solid #0078D7;
+            }
+            QComboBox:focus, QLineEdit:focus {
+                border: 2px solid #0078D7;
+                background-color: #222;
             }
         """)
 
+        # 🔹 Activar el cursor de manito en los botones (forma correcta)
+        self.btn_aceptar.setCursor(QtCore.Qt.PointingHandCursor)
+        self.btn_cancelar.setCursor(QtCore.Qt.PointingHandCursor)
 class Page4(QtWidgets.QWidget):
     def __init__(self, main_window, glosa, fecha, parent=None):
         super().__init__(parent)

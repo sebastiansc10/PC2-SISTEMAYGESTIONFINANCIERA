@@ -174,7 +174,7 @@ def mostrar_transacciones(glosa, fecha):
                 FROM transaccion t
                 INNER JOIN cuenta c ON t.id_cuenta = c.id_cuenta
                 WHERE t.id_diario = (SELECT d.id_diario FROM diario d WHERE d.glosa = %s AND d.fecha = %s)
-                ORDER BY t.dh DESC, t.cantidad DESC;
+                ORDER BY t.id_transaccion;
                 """, 
                 (glosa, fecha)
             )
