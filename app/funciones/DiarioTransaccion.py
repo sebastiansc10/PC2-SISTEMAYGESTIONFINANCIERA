@@ -369,6 +369,6 @@ def truncar_diario():
     """Trunca la tabla Diario, eliminando todos los registros."""
     with obtener_conexion() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("TRUNCATE diario RESTART IDENTITY CASCADE;")
+            cursor.execute("truncate diario cascade;")
             conn.commit()  # Confirmar los cambios
     return json.dumps({"mensaje": "Tabla Diario truncada correctamente"})
