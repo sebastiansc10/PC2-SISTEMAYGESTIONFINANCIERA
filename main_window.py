@@ -3,6 +3,8 @@ from PyQt5 import QtWidgets, QtCore
 from page1 import Page1
 from page2 import Page2
 from page3 import Page3
+from datetime import datetime
+
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -153,10 +155,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         return button
 
     def generar_reporte(self):
+        # Convertir la fecha de "dd/MM/yyyy" a "yyyy-MM-dd" antes de enviarla a PostgreSQL
         fechainicio = self.fecha_inicio.date().toString("dd/MM/yyyy")
         fechafin = self.fecha_cierre.date().toString("dd/MM/yyyy")
 
-        self.page3.actualizar_fechas(fechainicio, fechafin)
+        # Convertir a formato PostgreSQL (YYYY-MM-DD)
+        fechainicio_pg = datetime.strptime(fechainicio, "%d/%m/%Y").strftime("%Y-%m-%d")
+        fechafin_pg = datetime.strptime(fechafin, "%d/%m/%Y").strftime("%Y-%m-%d")
+
+        self.page3.actualizar_fechas(fechainicio_pg, fechafin_pg)
         self.stackedWidget.setCurrentIndex(2)
         self.formulario_reporte.close()
 
