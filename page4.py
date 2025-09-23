@@ -4,8 +4,143 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem, QVBoxLayout, QPushButton, QHBoxLayout, QTableWidget,
     QMessageBox, QHeaderView, QComboBox, QDialog, QLabel, QLineEdit, QFormLayout
 )
-from app.funciones.DiarioTransaccion import mostrar_transacciones, obtener_cuentas, registrar_nueva_transaccion, eliminar_transaccion, actualizar_transaccion
+from PyQt5.QtGui import QColor, QBrush
+from app.funciones.DiarioTransaccion import (
+    mostrar_transacciones, obtener_cuentas, registrar_nueva_transaccion,
+    eliminar_transaccion, actualizar_transaccion
+)
 
+# ───────────────────────── Paleta StoneCo ─────────────────────────
+STONE = {
+    "bg":          "#0f1412",   # fondo app (oscuro elegante)
+    "card":        "#151a18",
+    "text":        "#ffffff",
+    "muted":       "#cfe7d8",
+    "g1":          "#00A859",   # primary
+    "g2":          "#00C853",   # light
+    "g_dark":      "#008C4A",   # hover/pressed
+    "g_outline":   "#1a3c2d",   # bordes sutiles
+    "accent":      "#1DE9B6",
+    "danger":      "#e74c3c",
+    "gray":        "#95a5a6",
+    "gray_dark":   "#7f8c8d"
+}
+
+# ───────────────────────── Helpers de estilo ─────────────────────────
+def stone_button(button: QPushButton, kind: str = "primary"):
+    """Aplica estilo StoneCo al botón. kind: primary | secondary | danger"""
+    if kind == "secondary":
+        button.setStyleSheet(f"""
+            QPushButton {{
+                background: {STONE['gray_dark']};
+                color: {STONE['text']};
+                padding: 16px 24px;
+                border-radius: 12px;
+                border: 2px solid {STONE['g_outline']};
+                font-size: 16px; font-weight: 800;
+            }}
+            QPushButton:hover {{
+                background-color: {STONE['gray']};
+                border: 2px solid {STONE['accent']};
+            }}
+            QPushButton:pressed {{
+                background-color: #00000055;
+                border: 2px solid #ffffff;
+            }}
+        """)
+    elif kind == "danger":
+        button.setStyleSheet(f"""
+            QPushButton {{
+                background: {STONE['danger']};
+                color: {STONE['text']};
+                padding: 16px 24px;
+                border-radius: 12px;
+                border: 2px solid {STONE['g_outline']};
+                font-size: 16px; font-weight: 800;
+            }}
+            QPushButton:hover {{
+                background-color: #c0392b;
+                border: 2px solid {STONE['accent']};
+            }}
+            QPushButton:pressed {{
+                background-color: #00000055;
+                border: 2px solid #ffffff;
+            }}
+        """)
+    else:  # primary
+        button.setStyleSheet(f"""
+            QPushButton {{
+                background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1,
+                         stop:0 {STONE['g1']}, stop:1 {STONE['g2']});
+                color: {STONE['text']};
+                padding: 16px 24px;
+                border-radius: 12px;
+                border: 2px solid {STONE['g_outline']};
+                font-size: 16px; font-weight: 800;
+            }}
+            QPushButton:hover {{
+                background-color: {STONE['g_dark']};
+                border: 2px solid {STONE['accent']};
+            }}
+            QPushButton:pressed {{
+                background-color: #00000055;
+                border: 2px solid #ffffff;
+            }}
+        """)
+    f = button.font(); f.setPointSize(16); f.setBold(True); button.setFont(f)
+    button.setCursor(QtCore.Qt.PointingHandCursor)
+    button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+    button.setFixedHeight(56)
+
+def stone_table(table: QTableWidget):
+    table.setStyleSheet(f"""
+        QTableWidget {{
+            background-color: {STONE['card']};
+            color: {STONE['text']};
+            gridline-color: {STONE['g_outline']};
+            border: 1px solid {STONE['g_outline']};
+            border-radius: 10px;
+        }}
+        QHeaderView::section {{
+            background-color: qlineargradient(
+                spread:pad, x1:0, y1:0, x2:1, y2:1,
+                stop:0 {STONE['g1']}, stop:1 {STONE['g2']}
+            );
+            color: {STONE['text']};
+            padding: 8px 10px;
+            border: none;
+            border-right: 1px solid {STONE['g_outline']};
+            font-weight: 700;
+        }}
+        QTableWidget::item {{
+            background-color: {STONE['card']};
+            color: {STONE['text']};
+            padding: 6px;
+        }}
+        QTableWidget::item:selected {{
+            background-color: {STONE['g_dark']};
+            color: {STONE['text']};
+            border: 2px solid {STONE['accent']};
+        }}
+        QScrollBar:vertical {{
+            border: none;
+            background: {STONE['card']};
+            width: 10px;
+            margin: 2px;
+            border-radius: 6px;
+        }}
+        QScrollBar::handle:vertical {{
+            background: {STONE['g_outline']};
+            border-radius: 6px;
+            min-height: 20px;
+        }}
+        QScrollBar::handle:vertical:hover {{ background: {STONE['g2']}; }}
+        QScrollBar::handle:vertical:pressed {{ background: {STONE['g_dark']}; }}
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ background: none; width:0; height:0; }}
+        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: none; }}
+    """)
+
+# ───────────────────────── Diálogo de Transacción ─────────────────────────
 class TransaccionDialog(QDialog):
     def __init__(self, parent=None, transaccion=None):
         super().__init__(parent)
@@ -16,133 +151,80 @@ class TransaccionDialog(QDialog):
     def setup_ui(self):
         layout = QFormLayout(self)
 
-        # 🔹 Combobox para las cuentas
+        # Combobox de cuentas
         self.cuenta_combo = QComboBox()
-        self.cuenta_combo.setMinimumHeight(40)  # 🔹 Mayor altura para mejor legibilidad
+        self.cuenta_combo.setMinimumHeight(40)
         self.cuentas = obtener_cuentas()
         for id_cuenta, nombre in self.cuentas.items():
             self.cuenta_combo.addItem(f"{id_cuenta} - {nombre}", id_cuenta)
 
-        # 🔹 Combobox para Debe/Haber
+        # Debe/Haber
         self.dh_combo = QComboBox()
         self.dh_combo.setMinimumHeight(40)
         self.dh_combo.addItems(["Debe", "Haber"])
 
-        # 🔹 Campo para la cantidad
+        # Cantidad
         self.cantidad_input = QLineEdit()
         self.cantidad_input.setPlaceholderText("0.00")
         self.cantidad_input.setMinimumHeight(40)
-        self.cantidad_input.setAlignment(QtCore.Qt.AlignRight)  # 🔹 Alineación a la derecha
+        self.cantidad_input.setAlignment(QtCore.Qt.AlignRight)
 
-        # 🔹 Agregar widgets al layout con iconos descriptivos
-        layout.addRow("📌 <b>Cuenta:</b>", self.cuenta_combo)
-        layout.addRow("💰 <b>Tipo:</b>", self.dh_combo)
-        layout.addRow("📊 <b>Cantidad:</b>", self.cantidad_input)
+        # Campos
+        layout.addRow("Cuenta:", self.cuenta_combo)
+        layout.addRow("Tipo:", self.dh_combo)
+        layout.addRow("Cantidad:", self.cantidad_input)
 
-        # 🔹 Botones de acción
+        # Botones
         buttons = QHBoxLayout()
-        self.btn_aceptar = QPushButton("💾 Guardar")
-        self.btn_cancelar = QPushButton("❌ Cancelar")
-
-        # 🔹 Aplicar estilo a los botones
-        button_style = """
-            QPushButton {
-                background: #0078D7;
-                color: white;
-                padding: 16px;
-                border-radius: 8px;
-                font-size: 18px;
-                font-weight: bold;
-                border: 2px solid #444;
-                min-width: 160px;
-            }
-            QPushButton:hover {
-                background-color: #005A9E;
-                border: 2px solid white;
-            }
-            QPushButton:pressed {
-                background-color: #004080;
-                border: 2px solid #ffffff;
-            }
-        """
-        self.btn_aceptar.setStyleSheet(button_style)
-
-        cancel_button_style = """
-            QPushButton {
-                background: #e74c3c;
-                color: white;
-                padding: 16px;
-                border-radius: 8px;
-                font-size: 18px;
-                font-weight: bold;
-                border: 2px solid #444;
-                min-width: 160px;
-            }
-            QPushButton:hover {
-                background-color: #c0392b;
-                border: 2px solid white;
-            }
-            QPushButton:pressed {
-                background-color: #a93226;
-                border: 2px solid #ffffff;
-            }
-        """
-        self.btn_cancelar.setStyleSheet(cancel_button_style)
-
-        # 🔹 Añadir los botones al layout
-        buttons.addWidget(self.btn_aceptar)
-        buttons.addWidget(self.btn_cancelar)
-
+        self.btn_aceptar = QPushButton("Guardar")
+        self.btn_cancelar = QPushButton("Cancelar")
+        stone_button(self.btn_aceptar, "primary")
+        stone_button(self.btn_cancelar, "danger")
         self.btn_aceptar.clicked.connect(self.accept)
         self.btn_cancelar.clicked.connect(self.reject)
-
+        buttons.addWidget(self.btn_aceptar)
+        buttons.addWidget(self.btn_cancelar)
         layout.addRow("", buttons)
 
-        # 🔹 Si es una actualización, llenar los campos con los datos actuales
+        # Si es actualización, precargar
         if self.transaccion:
             index = self.cuenta_combo.findData(self.transaccion['id_cuenta'])
-            self.cuenta_combo.setCurrentIndex(index)
+            if index >= 0:
+                self.cuenta_combo.setCurrentIndex(index)
             self.dh_combo.setCurrentText(self.transaccion['tipo'])
             self.cantidad_input.setText(str(self.transaccion['cantidad']))
 
-        # 🔹 Aplicar estilo general a la ventana
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #121212;
-                color: white;
+        # Estilo general StoneCo
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {STONE['bg']};
+                color: {STONE['text']};
                 border-radius: 12px;
                 padding: 10px;
-            }
-            QLabel {
-                color: white;
-                font-size: 18px;
-                font-weight: bold;
-            }
-            QComboBox, QLineEdit {
-                background-color: #1a1a1a;
-                color: white;
-                border: 1px solid #444;
+            }}
+            QLabel {{
+                color: {STONE['text']};
+                font-size: 16px;
+                font-weight: 700;
+            }}
+            QComboBox, QLineEdit {{
+                background-color: {STONE['card']};
+                color: {STONE['text']};
+                border: 1px solid {STONE['g_outline']};
                 padding: 10px;
-                border-radius: 6px;
-                font-size: 18px;
-            }
-            QComboBox::drop-down {
-                width: 20px;
-                subcontrol-origin: padding;
-                subcontrol-position: right center;
-            }
-            QComboBox:hover, QLineEdit:hover {
-                border: 1px solid #0078D7;
-            }
-            QComboBox:focus, QLineEdit:focus {
-                border: 2px solid #0078D7;
-                background-color: #222;
-            }
+                border-radius: 8px;
+                font-size: 16px;
+            }}
+            QComboBox:hover, QLineEdit:hover {{
+                border: 1px solid {STONE['g2']};
+            }}
+            QComboBox:focus, QLineEdit:focus {{
+                border: 2px solid {STONE['accent']};
+                background-color: {STONE['bg']};
+            }}
         """)
 
-        # 🔹 Activar el cursor de manito en los botones (forma correcta)
-        self.btn_aceptar.setCursor(QtCore.Qt.PointingHandCursor)
-        self.btn_cancelar.setCursor(QtCore.Qt.PointingHandCursor)
+# ───────────────────────── Página 4 (Transacciones) ─────────────────────────
 class Page4(QtWidgets.QWidget):
     def __init__(self, main_window, glosa, fecha, parent=None):
         super().__init__(parent)
@@ -154,219 +236,96 @@ class Page4(QtWidgets.QWidget):
 
     def setup_ui(self):
         self.page4_layout = QVBoxLayout(self)
-        
-        # Título
-        self.label = QtWidgets.QLabel(f"📜 Transacciones del Diario: {self.glosa}")
+
+        # Fondo
+        self.setStyleSheet(f"background-color: {STONE['bg']}; color: {STONE['text']};")
+
+        # Título (sin iconos)
+        self.label = QtWidgets.QLabel(f"Transacciones del diario: {self.glosa}")
         self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("font-size: 22px; font-weight: bold; color: #f1c40f; margin-bottom: 10px;")
-        
+        self.label.setStyleSheet(f"font-size: 22px; font-weight: 800; color: {STONE['g2']}; margin-bottom: 10px;")
+
         # Tabla
         self.tableWidget = QTableWidget()
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setHorizontalHeaderLabels(["Código de cuenta", "Nombre de cuenta", "Debe", "Haber"])
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.tableWidget.verticalHeader().setVisible(False)  # 🔹 Oculta los índices de fila
-        self.tableWidget.setAlternatingRowColors(True)
-        self.tableWidget.setStyleSheet("""
-            /* 🔹 Fondo General de la Tabla */
-            QTableWidget {
-                background-color: #121212;
-                gridline-color: #444;
-                color: white;
-                font-size: 16px;
-                font-weight: bold;
-            }
+        self.tableWidget.verticalHeader().setVisible(False)
+        self.tableWidget.setAlternatingRowColors(False)
+        stone_table(self.tableWidget)
 
-            /* 🔹 Ítems de la Tabla */
-            QTableWidget::item {
-                background-color: #1a1a1a;
-                color: white;
-                padding: 6px;
-                border: none;  /* 🔹 Elimina el borde */
-            }
-
-
-            /* 🔹 Cabeceras */
-            QHeaderView::section {
-                background-color: #0078D7;
-                color: white;
-                padding: 10px;  
-                font-size: 16px;
-                font-weight: bold;
-                border: 1px solid #444;
-                border-radius: 6px;  /* 🔹 Bordes redondeados */
-            }
-
-            /* 🔹 Selección de Items */
-            QTableWidget::item:selected {
-                background-color: #005A9E;
-                color: white;
-                border: 2px solid white;
-                border-radius: 6px;  /* 🔹 Hace la selección más elegante */
-            }
-
-            /* 🔹 Estilo para el Scrollbar */
-            QScrollBar:vertical {
-                border: none;
-                background: #1a1a1a;
-                width: 12px; /* 🔹 Hace el scrollbar más delgado */
-                margin: 2px 2px 2px 2px;
-                border-radius: 6px;
-            }
-
-            /* 🔹 Parte del Scrollbar que se mueve */
-            QScrollBar::handle:vertical {
-                background: #444;
-                border-radius: 6px;
-                min-height: 20px;
-            }
-            
-            /* 🔹 Cuando el cursor pasa sobre el Scroll */
-            QScrollBar::handle:vertical:hover {
-                background: #0078D7;
-            }
-            
-            /* 🔹 Cuando se hace clic en el Scroll */
-            QScrollBar::handle:vertical:pressed {
-                background: #005A9E;
-            }
-
-            /* 🔹 Flechas del Scroll */
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                background: none;
-                width: 0px;
-                height: 0px;
-            }
-
-            /* 🔹 Espacio entre scrollbar y bordes */
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                background: none;
-            }
-
-            /* 🔹 QDateEdit para que combine mejor */
-            QDateEdit {
-                background-color: #1a1a1a;
-                color: white;
-                font-weight: bold;
-                border: none;
-                padding: 6px 0px; /* 🔹 Ajuste vertical */
-                font-size: 16px;
-                text-align: center;
-            }
-            QDateEdit::drop-down {
-                width: 20px;
-                subcontrol-origin: padding;
-                subcontrol-position: right center;
-            }
-
-            QDateEdit:hover {
-                background-color: #2a2a2a;
-                border: 1px solid #0078D7;
-            }
-
-            QDateEdit:focus {
-                background-color: #005A9E;
-                color: white;
-                border: 2px solid #FFF;
-            }
-        """)
-        
-        # Botones
+        # Botones (sin iconos)
         btn_layout = QHBoxLayout()
-        
-        self.btn_nueva_transaccion = self.create_button("➕ Nueva Transacción", "#4CAF50", "#45a049")
-        self.btn_actualizar_transaccion = self.create_button("🔄 Actualizar Transacción", "#FFA500", "#cc8400")
-        self.btn_borrar_transaccion = self.create_button("🗑️ Borrar Transacción", "#F44336", "#d32f2f")
-        self.btn_back_diarios = self.create_button("🔙 Volver a Diarios", "#34495E", "#2c3e50")
-        self.btn_back_home = self.create_button("🏠 Volver al Inicio", "#2C3E50", "#1a252f")
-        
+        self.btn_nueva_transaccion      = QPushButton("Nueva transacción")
+        self.btn_actualizar_transaccion = QPushButton("Actualizar transacción")
+        self.btn_borrar_transaccion     = QPushButton("Borrar transacción")
+        self.btn_back_diarios           = QPushButton("Volver a diarios")
+        self.btn_back_home              = QPushButton("Volver al inicio")
+
+        stone_button(self.btn_nueva_transaccion, "primary")
+        stone_button(self.btn_actualizar_transaccion, "secondary")
+        stone_button(self.btn_borrar_transaccion, "danger")
+        stone_button(self.btn_back_diarios, "secondary")
+        stone_button(self.btn_back_home, "secondary")
+
         # Conectar señales
         self.btn_nueva_transaccion.clicked.connect(self.mostrar_dialogo_nueva_transaccion)
         self.btn_actualizar_transaccion.clicked.connect(self.mostrar_dialogo_actualizar_transaccion)
         self.btn_borrar_transaccion.clicked.connect(self.borrar_transaccion_seleccionada)
         self.btn_back_diarios.clicked.connect(self.volver_a_diarios)
         self.btn_back_home.clicked.connect(self.volver_al_inicio)
-        
-        btn_layout.addWidget(self.btn_nueva_transaccion)
-        btn_layout.addWidget(self.btn_actualizar_transaccion)
-        btn_layout.addWidget(self.btn_borrar_transaccion)
-        btn_layout.addWidget(self.btn_back_diarios)
-        btn_layout.addWidget(self.btn_back_home)
-        
-        # Agregar widgets al layout principal
+
+        # Layout
+        for b in (self.btn_nueva_transaccion, self.btn_actualizar_transaccion,
+                  self.btn_borrar_transaccion, self.btn_back_diarios, self.btn_back_home):
+            btn_layout.addWidget(b)
+
         self.page4_layout.addWidget(self.label)
         self.page4_layout.addWidget(self.tableWidget)
         self.page4_layout.addLayout(btn_layout)
-        
         self.setLayout(self.page4_layout)
 
-    def create_button(self, text, color, hover_color):
-        button = QPushButton(text)
-        button.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {color};
-                color: white;
-                padding: 18px 30px;
-                border-radius: 12px;
-                font-size: 16px;
-                font-weight: bold;
-                border: 2px solid #444;
-            }}
-            QPushButton:hover {{
-                background-color: {hover_color};
-                border: 2px solid white;
-            }}
-            QPushButton:pressed {{
-                background-color: #00000044;
-                border: 2px solid #fff;
-            }}
-        """)
-        button.setCursor(QtCore.Qt.PointingHandCursor)
-        button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        button.setMinimumHeight(60)
-        button.setFixedHeight(60)
-        return button
-
+    # ─────────────────────── Acciones de UI ───────────────────────
     def mostrar_dialogo_nueva_transaccion(self):
-        """Muestra el diálogo para agregar una nueva transacción."""
         dialogo = TransaccionDialog(self)
         if dialogo.exec_() == QDialog.Accepted:
             try:
-                # Obtener datos del diálogo
                 id_cuenta = dialogo.cuenta_combo.currentData()
                 dh = dialogo.dh_combo.currentText()
                 cantidad = float(dialogo.cantidad_input.text())
 
-                # 🔹 Verificar si el código de cuenta ya existe en la tabla
+                # Evitar duplicados de cuenta en la tabla
                 for row in range(self.tableWidget.rowCount()):
                     if self.tableWidget.item(row, 0).text() == str(id_cuenta):
-                        QMessageBox.warning(self, "Error", "⚠️ El código de cuenta ya existe en la tabla.")
-                        return  # 🔹 Detener el proceso de guardado
+                        QMessageBox.warning(self, "Error", "El código de cuenta ya existe en la tabla.")
+                        return
 
-                # Registrar la transacción
                 if registrar_nueva_transaccion(id_cuenta, dh, cantidad, self.glosa, self.fecha):
-                    QMessageBox.information(self, "Éxito", "✅ Transacción registrada correctamente")
-                    self.obtener_transacciones()  # 🔄 Actualizar la tabla
+                    QMessageBox.information(self, "Éxito", "Transacción registrada correctamente.")
+                    self.obtener_transacciones()
                 else:
-                    QMessageBox.warning(self, "Error", "❌ No se pudo registrar la transacción")
+                    QMessageBox.warning(self, "Error", "No se pudo registrar la transacción.")
             except ValueError:
-                QMessageBox.warning(self, "Error", "⚠️ Por favor ingrese una cantidad válida")
+                QMessageBox.warning(self, "Error", "Ingrese una cantidad válida.")
 
     def mostrar_dialogo_actualizar_transaccion(self):
-        """Muestra el diálogo para actualizar una transacción existente."""
         selected_items = self.tableWidget.selectedItems()
         if not selected_items:
-            QMessageBox.warning(self, "Error", "⚠️ Por favor, seleccione una transacción para actualizar.")
+            QMessageBox.warning(self, "Error", "Seleccione una transacción para actualizar.")
             return
 
         row = selected_items[0].row()
         id_cuenta_actual = self.tableWidget.item(row, 0).text()
 
+        # Detectar tipo y cantidad actuales
+        tipo_actual = "Debe" if self.tableWidget.item(row, 2).text() != "0" else "Haber"
+        cantidad_actual = float(self.tableWidget.item(row, 2).text() or self.tableWidget.item(row, 3).text())
+
         transaccion_actual = {
             'id_cuenta': id_cuenta_actual,
             'cuenta': self.tableWidget.item(row, 1).text(),
-            'tipo': "Debe" if self.tableWidget.item(row, 2).text() != "0" else "Haber",
-            'cantidad': float(self.tableWidget.item(row, 2).text() or self.tableWidget.item(row, 3).text())
+            'tipo': tipo_actual,
+            'cantidad': cantidad_actual
         }
 
         dialogo = TransaccionDialog(self, transaccion_actual)
@@ -374,11 +333,11 @@ class Page4(QtWidgets.QWidget):
             try:
                 nueva_cuenta = dialogo.cuenta_combo.currentData()
 
-                # 🔹 Validar si la nueva cuenta ya existe en otra fila (excepto en la actual)
+                # Evitar duplicado de cuenta (salvo misma fila)
                 for r in range(self.tableWidget.rowCount()):
                     if r != row and self.tableWidget.item(r, 0).text() == str(nueva_cuenta):
-                        QMessageBox.warning(self, "Error", "⚠️ No se pueden duplicar códigos de cuenta en la tabla.")
-                        return  # 🔹 Detener el proceso de actualización
+                        QMessageBox.warning(self, "Error", "No se pueden duplicar códigos de cuenta en la tabla.")
+                        return
 
                 nuevo_dh = dialogo.dh_combo.currentText()
                 nueva_cantidad = float(dialogo.cantidad_input.text())
@@ -394,50 +353,50 @@ class Page4(QtWidgets.QWidget):
                     nueva_cuenta
                 ))
 
-                QMessageBox.information(self, "Resultado", resultado["mensaje"])
-                self.obtener_transacciones()  # 🔄 Refrescar la tabla
+                QMessageBox.information(self, "Resultado", resultado.get("mensaje", "Actualización realizada."))
+                self.obtener_transacciones()
             except ValueError:
-                QMessageBox.warning(self, "Error", "⚠️ Por favor ingrese una cantidad válida")
+                QMessageBox.warning(self, "Error", "Ingrese una cantidad válida.")
 
     def borrar_transaccion_seleccionada(self):
-        """Borra la transacción seleccionada en la tabla."""
         selected_items = self.tableWidget.selectedItems()
         if not selected_items:
-            QMessageBox.warning(self, "Error", "Por favor, seleccione una transacción para borrar.")
+            QMessageBox.warning(self, "Error", "Seleccione una transacción para borrar.")
             return
 
         row = selected_items[0].row()
         id_cuenta = self.tableWidget.item(row, 0).text()
-        
-        cantidad = 0
-        dh = ''
-        for col in range(2, 4):
-            valor = self.tableWidget.item(row, col).text()
-            if valor != '0':
-                cantidad = float(valor)
-                dh = 'Debe' if col == 2 else 'Haber'
-                break
 
-        respuesta = QMessageBox.question(self, "Confirmar borrado", 
-                                         "¿Está seguro de que desea borrar esta transacción?",
-                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        
+        # Detectar cantidad y tipo
+        cantidad = 0.0
+        dh = ''
+        debe_val = self.tableWidget.item(row, 2).text()
+        haber_val = self.tableWidget.item(row, 3).text()
+        if debe_val and debe_val != '0':
+            cantidad = float(debe_val); dh = 'Debe'
+        else:
+            cantidad = float(haber_val or 0); dh = 'Haber'
+
+        respuesta = QMessageBox.question(
+            self, "Confirmar borrado",
+            "¿Está seguro de que desea borrar esta transacción?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
         if respuesta == QMessageBox.Yes:
             resultado = json.loads(eliminar_transaccion(self.glosa, self.fecha, id_cuenta, cantidad, dh))
-            QMessageBox.information(self, "Resultado", resultado["mensaje"])
-            self.obtener_transacciones()  # Actualizar la tabla
+            QMessageBox.information(self, "Resultado", resultado.get("mensaje", "Operación realizada."))
+            self.obtener_transacciones()
 
+    # ─────────────────────── Datos ───────────────────────
     def obtener_transacciones(self):
-        """Obtiene las transacciones de un diario específico y las muestra en la tabla."""
         resultado_json = mostrar_transacciones(self.glosa, self.fecha)
         resultado = json.loads(resultado_json)
         self.tableWidget.setRowCount(len(resultado))
         
         for row, transaccion in enumerate(resultado):
-            self.tableWidget.setRowHeight(row, 50)  # 🔹 Ajusta la altura de cada fila a 50px
+            self.tableWidget.setRowHeight(row, 50)
             self.tableWidget.setItem(row, 0, QTableWidgetItem(str(transaccion["id_cuenta"])))
             self.tableWidget.setItem(row, 1, QTableWidgetItem(transaccion["cuenta"]))
-            
             if transaccion["tipo"] == "Debe":
                 self.tableWidget.setItem(row, 2, QTableWidgetItem(str(transaccion["cantidad"])))
                 self.tableWidget.setItem(row, 3, QTableWidgetItem("0"))
@@ -445,6 +404,7 @@ class Page4(QtWidgets.QWidget):
                 self.tableWidget.setItem(row, 2, QTableWidgetItem("0"))
                 self.tableWidget.setItem(row, 3, QTableWidgetItem(str(transaccion["cantidad"])))
 
+    # ─────────────────────── Navegación ───────────────────────
     def volver_a_diarios(self):
         self.main_window.stackedWidget.setCurrentIndex(1)
 

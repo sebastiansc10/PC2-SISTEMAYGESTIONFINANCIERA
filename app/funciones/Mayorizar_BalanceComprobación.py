@@ -4,12 +4,6 @@ from decimal import Decimal
 
 
 def mayorizar(fecha_inicio, fecha_fin):
-    """
-    Obtiene los movimientos contables agrupados por cuenta y fecha, y calcula el saldo absoluto.
-    :param fecha_inicio: Fecha inicial del rango (YYYY-MM-DD).
-    :param fecha_fin: Fecha final del rango (YYYY-MM-DD).
-    :return: Lista de diccionarios con los resultados del mayor.
-    """
     try:
         with obtener_conexion() as conn:
             with conn.cursor() as cursor:
